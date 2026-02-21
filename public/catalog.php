@@ -3,11 +3,11 @@ require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/includes/db.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 
-$pdo    = db();
-$search = trim($_GET['q']    ?? '');
-$catId  = intval($_GET['cat'] ?? 0);
-$page   = max(1, intval($_GET['page'] ?? 1));
-$perPage = 12;
+$pdo     = db();
+$search  = trim($_GET['q']    ?? '');
+$catId   = intval($_GET['cat'] ?? 0);
+$page    = max(1, intval($_GET['page'] ?? 1));
+$perPage = 16;
 
 $where  = ["p.status = 'active'"];
 $params = [];
@@ -37,322 +37,610 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute($params);
 $products   = $stmt->fetchAll();
-$categories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
+$categories = $pdo->query('SELECT id, name FROM categories ORDER BY sort_order, name')->fetchAll();
+
+// Category emoji map for the filter bar
+$catEmojis = [
+    'gift items'    => '🎁',
+    'clothing'      => '👕',
+    'souvenirs'     => '🏺',
+    'accessories'   => '💍',
+    'seasonal gifts'=> '🎄',
+    "children's"    => '🧸',
+    "men's wear"    => '👔',
+    "women's wear"  => '👗',
+];
 
 $baseLink = BASE_URL . '/public/catalog.php?q=' . urlencode($search) . '&cat=' . $catId;
+
+// Active category name
+$activeCatName = 'All Products';
+foreach ($categories as $c) {
+    if ((int)$c['id'] === $catId) { $activeCatName = $c['name']; break; }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Catalog — <?= APP_NAME ?></title>
+  <title><?= $catId ? e($activeCatName) . ' — ' : '' ?><?= APP_NAME ?> Store</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 
   <style>
-    /* ─── Public layout reset ────────────────────────────── */
-    body { background: var(--body-bg); }
+    /* ═══════════════════════════════════════════════════════
+       Giftz Public Storefront
+    ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: #F4F6FB; color: var(--text-primary); }
 
-    .pub-header {
-      background: var(--sidebar-bg);
-      color: #fff;
-      padding: 0 2rem;
-      height: 66px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
+    /* ─── Navbar ─────────────────────────────────────────── */
+    .navbar {
       position: sticky;
       top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 16px rgba(0,0,0,.35);
-    }
-
-    .pub-brand {
+      z-index: 200;
+      background: var(--sidebar-bg);
+      height: 62px;
       display: flex;
       align-items: center;
-      gap: .75rem;
+      padding: 0 2rem;
+      gap: 1.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,.4);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
       color: #fff;
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 1.1rem;
       text-decoration: none;
+      flex-shrink: 0;
+      letter-spacing: -.01em;
+    }
+    .nav-brand-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
       flex-shrink: 0;
     }
 
-    .pub-brand-icon {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, var(--accent), var(--secondary));
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      font-size: 1.1rem;
-    }
-
-    .pub-search-form {
+    .nav-search {
+      flex: 1;
+      max-width: 500px;
+      margin: 0 auto;
       display: flex;
-      gap: .5rem;
-      flex: 1;
-      max-width: 480px;
+      background: rgba(255,255,255,.1);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid rgba(255,255,255,.1);
+      transition: border-color .2s, background .2s;
     }
-
-    .pub-search-input {
+    .nav-search:focus-within {
+      background: rgba(255,255,255,.16);
+      border-color: var(--accent);
+    }
+    .nav-search input {
       flex: 1;
-      padding: .55rem 1rem;
-      border-radius: 8px;
+      background: transparent;
       border: none;
-      background: rgba(255,255,255,.12);
+      padding: .6rem 1rem;
       color: #fff;
-      font-size: .9rem;
+      font-size: .875rem;
       font-family: inherit;
       outline: none;
-      transition: background .2s;
     }
-    .pub-search-input::placeholder { color: rgba(255,255,255,.45); }
-    .pub-search-input:focus { background: rgba(255,255,255,.2); box-shadow: 0 0 0 2px var(--accent); }
-
-    .pub-search-btn {
-      padding: .55rem .95rem;
-      background: var(--accent);
-      color: #fff;
+    .nav-search input::placeholder { color: rgba(255,255,255,.4); }
+    .nav-search button {
+      background: transparent;
       border: none;
-      border-radius: 8px;
-      font-size: .9rem;
+      padding: 0 .9rem;
+      color: rgba(255,255,255,.6);
+      font-size: 1rem;
       cursor: pointer;
-      transition: background .2s;
+      transition: color .2s;
     }
-    .pub-search-btn:hover { background: var(--accent-dark); }
+    .nav-search button:hover { color: #fff; }
 
-    /* ─── Page wrapper ───────────────────────────────────── */
-    .pub-wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2rem 2rem 3rem;
-    }
-
-    /* ─── Category tabs ──────────────────────────────────── */
-    .cat-tabs {
-      display: flex;
-      gap: .5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1.75rem;
-    }
-
-    .cat-tab {
-      display: inline-flex;
-      align-items: center;
-      padding: .42rem 1rem;
-      border-radius: 100px;
-      font-size: .82rem;
-      font-weight: 500;
-      border: 1.5px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: all .2s;
+    .nav-tagline {
+      font-size: .78rem;
+      color: rgba(255,255,255,.4);
+      flex-shrink: 0;
       white-space: nowrap;
     }
-    .cat-tab:hover   { border-color: var(--accent); color: var(--accent); }
-    .cat-tab.active  { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    /* ─── Section info row ───────────────────────────────── */
-    .section-info {
+    /* ─── Hero ───────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #1A1D2E 0%, #2D2563 50%, #3D1A5C 100%);
+      padding: 4rem 2rem 3.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(108,99,255,.25) 0%, transparent 50%),
+        radial-gradient(circle at 80% 30%, rgba(255,101,132,.2) 0%, transparent 45%);
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 100px;
+      padding: .3rem .9rem;
+      font-size: .75rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.8);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: .75rem;
+      letter-spacing: -.02em;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--accent-light), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,.6);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    /* Hero search */
+    .hero-search {
+      display: flex;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,.35);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .hero-search input {
+      flex: 1;
+      border: none;
+      padding: .95rem 1.25rem;
+      font-size: .95rem;
+      font-family: inherit;
+      color: var(--text-primary);
+      outline: none;
+      background: transparent;
+    }
+    .hero-search input::placeholder { color: var(--text-muted); }
+    .hero-search button {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      border: none;
+      padding: 0 1.5rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity .2s;
       display: flex;
       align-items: center;
+      gap: .4rem;
+      white-space: nowrap;
+    }
+    .hero-search button:hover { opacity: .9; }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    .hero-stat { color: rgba(255,255,255,.55); font-size: .82rem; }
+    .hero-stat strong { color: #fff; display: block; font-size: 1.1rem; font-weight: 700; }
+
+    /* ─── Category bar ───────────────────────────────────── */
+    .cat-bar-wrap {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 62px;
+      z-index: 150;
+    }
+    .cat-bar {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .cat-bar::-webkit-scrollbar { display: none; }
+
+    .cat-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .9rem 1.1rem;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 2.5px solid transparent;
+      transition: color .2s, border-color .2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cat-btn:hover  { color: var(--accent); }
+    .cat-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    /* ─── Main content ───────────────────────────────────── */
+    .store-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+
+    /* ─── Section header ─────────────────────────────────── */
+    .section-hd {
+      display: flex;
+      align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
       gap: .75rem;
     }
-    .section-info .count { font-size: .875rem; color: var(--text-muted); }
-    .section-info .count a { color: var(--accent); }
+    .section-hd h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .section-hd h2 .count-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--accent);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .18em .6em;
+      border-radius: 100px;
+      margin-left: .5rem;
+      vertical-align: middle;
+    }
+    .section-hd .filter-info { font-size: .85rem; color: var(--text-muted); }
+    .section-hd .filter-info a { color: var(--accent); }
 
     /* ─── Product grid ───────────────────────────────────── */
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
     }
 
     .product-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      background: #fff;
+      border-radius: 14px;
       overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
       display: flex;
       flex-direction: column;
       text-decoration: none;
       color: inherit;
-      transition: transform .2s, box-shadow .2s;
+      transition: transform .22s ease, box-shadow .22s ease;
+      border: 1px solid var(--border);
     }
     .product-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 36px rgba(0,0,0,.13);
       color: inherit;
     }
 
-    .product-card-img {
-      width: 100%;
+    /* Image area */
+    .card-img-wrap {
+      position: relative;
+      overflow: hidden;
       aspect-ratio: 1;
+      background: #F3F4F6;
+    }
+    .card-img-wrap img {
+      width: 100%; height: 100%;
       object-fit: cover;
       display: block;
+      transition: transform .35s ease;
     }
+    .product-card:hover .card-img-wrap img { transform: scale(1.06); }
 
-    .product-card-placeholder {
-      width: 100%;
-      aspect-ratio: 1;
-      background: linear-gradient(135deg, #F3F4F6, #E9EBF0);
+    .card-placeholder {
+      width: 100%; height: 100%;
       display: grid;
       place-items: center;
-      font-size: 2.8rem;
-      color: var(--text-muted);
+      font-size: 3.5rem;
+      background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
+      transition: transform .35s ease;
     }
+    .product-card:hover .card-placeholder { transform: scale(1.08); }
 
-    .product-card-body {
-      padding: 1rem;
+    /* Hover overlay */
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(26,29,46,.55);
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transition: opacity .22s;
+    }
+    .product-card:hover .card-overlay { opacity: 1; }
+    .card-overlay-btn {
+      background: #fff;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: .82rem;
+      padding: .6rem 1.3rem;
+      border-radius: 100px;
+      letter-spacing: .02em;
+      transform: translateY(6px);
+      transition: transform .22s;
+    }
+    .product-card:hover .card-overlay-btn { transform: translateY(0); }
+
+    /* Out-of-stock ribbon */
+    .card-ribbon {
+      position: absolute;
+      top: .75rem;
+      right: .75rem;
+      background: var(--danger);
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: .25em .7em;
+      border-radius: 100px;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .card-ribbon.low { background: var(--warning); }
+
+    /* Card body */
+    .card-body {
+      padding: 1rem 1.1rem 1.1rem;
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: .3rem;
     }
-
-    .product-card-cat {
-      font-size: .7rem;
-      font-weight: 600;
+    .card-cat {
+      font-size: .68rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .07em;
       color: var(--accent);
     }
-
-    .product-card-name {
+    .card-name {
       font-size: .95rem;
       font-weight: 600;
-      line-height: 1.3;
+      line-height: 1.35;
       color: var(--text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-
-    .product-card-price {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent);
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-top: auto;
-      padding-top: .6rem;
+      padding-top: .75rem;
     }
-
-    .product-card-stock {
-      font-size: .75rem;
-      font-weight: 500;
+    .card-price {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -.02em;
     }
-    .stock-txt-ok  { color: var(--success); }
-    .stock-txt-low { color: var(--warning); }
-    .stock-txt-out { color: var(--danger);  }
+    .card-stock {
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .2em .65em;
+      border-radius: 100px;
+    }
+    .cs-ok  { background: rgba(16,185,129,.1);  color: var(--success); }
+    .cs-low { background: rgba(245,158,11,.1);  color: var(--warning); }
+    .cs-out { background: rgba(239,68,68,.1);   color: var(--danger);  }
 
-    /* ─── Pagination row ─────────────────────────────────── */
-    .pagination-row {
+    /* ─── Empty state ────────────────────────────────────── */
+    .empty-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 4rem 2rem;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .empty-wrap .icon { font-size: 3.5rem; opacity: .35; margin-bottom: 1rem; }
+    .empty-wrap h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: .5rem; }
+    .empty-wrap p  { font-size: .9rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+    /* ─── Pagination ─────────────────────────────────────── */
+    .pg-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
       flex-wrap: wrap;
-      padding-top: .5rem;
     }
+    .pg-info { font-size: .85rem; color: var(--text-muted); }
 
     /* ─── Footer ─────────────────────────────────────────── */
-    .pub-footer {
-      text-align: center;
-      padding: 1.5rem 2rem;
-      font-size: .82rem;
-      color: var(--text-muted);
-      border-top: 1px solid var(--border);
+    .store-footer {
+      background: var(--sidebar-bg);
+      color: rgba(255,255,255,.6);
+      padding: 3rem 2rem 2rem;
+    }
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .footer-brand { display: flex; align-items: center; gap: .65rem; color: #fff; font-weight: 800; font-size: 1.05rem; margin-bottom: .75rem; }
+    .footer-brand-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--secondary));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: .9rem;
+    }
+    .footer-desc { font-size: .83rem; line-height: 1.7; max-width: 280px; }
+    .footer-col h4 { color: #fff; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .85rem; }
+    .footer-col a {
+      display: block;
+      font-size: .83rem;
+      color: rgba(255,255,255,.5);
+      text-decoration: none;
+      margin-bottom: .5rem;
+      transition: color .2s;
+    }
+    .footer-col a:hover { color: #fff; }
+    .footer-bottom {
+      max-width: 1280px;
+      margin: 1.5rem auto 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .78rem;
+      color: rgba(255,255,255,.3);
+      flex-wrap: wrap;
+      gap: .5rem;
     }
 
     /* ─── Responsive ─────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .pub-header  { padding: 0 1rem; }
-      .pub-wrap    { padding: 1.25rem 1rem 2rem; }
-      .product-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+    @media (max-width: 900px) {
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .footer-inner > :first-child { grid-column: 1 / -1; }
     }
-    @media (max-width: 380px) {
+    @media (max-width: 640px) {
+      .navbar { padding: 0 1rem; }
+      .nav-tagline { display: none; }
+      .hero { padding: 2.5rem 1rem 2rem; }
+      .hero-stats { gap: 1.25rem; }
+      .cat-bar { padding: 0 1rem; }
+      .store-wrap { padding: 1.5rem 1rem 3rem; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+      .footer-inner { grid-template-columns: 1fr; gap: 1.5rem; }
+      .store-footer { padding: 2rem 1rem 1.5rem; }
+    }
+    @media (max-width: 360px) {
       .product-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-<!-- ─── Header ─────────────────────────────────────────── -->
-<header class="pub-header">
-  <a href="<?= BASE_URL ?>/public/catalog.php" class="pub-brand">
-    <div class="pub-brand-icon">🎁</div>
-    <span><?= APP_NAME ?></span>
+<!-- ─── Navbar ────────────────────────────────────────── -->
+<header class="navbar">
+  <a href="<?= BASE_URL ?>/public/catalog.php" class="nav-brand">
+    <div class="nav-brand-icon">🎁</div>
+    <?= APP_NAME ?>
   </a>
 
-  <form class="pub-search-form" method="GET" action="">
-    <?php if ($catId): ?>
-    <input type="hidden" name="cat" value="<?= $catId ?>">
-    <?php endif; ?>
-    <input
-      type="search"
-      name="q"
-      class="pub-search-input"
-      placeholder="Search products..."
-      value="<?= e($search) ?>"
-      autocomplete="off"
-    >
-    <button type="submit" class="pub-search-btn">🔍</button>
+  <form class="nav-search" method="GET" action="">
+    <?php if ($catId): ?><input type="hidden" name="cat" value="<?= $catId ?>"><?php endif; ?>
+    <input type="search" name="q" placeholder="Search products..." value="<?= e($search) ?>" autocomplete="off">
+    <button type="submit">🔍</button>
   </form>
+
+  <span class="nav-tagline">All prices in <?= CURRENCY_CODE ?></span>
 </header>
 
-<!-- ─── Main ───────────────────────────────────────────── -->
-<main class="pub-wrap">
+<!-- ─── Hero (shown only on the unfiltered landing) ─── -->
+<?php if (!$search && !$catId && $page === 1): ?>
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🎁 New arrivals every week</div>
+    <h1>Your perfect <span>gift</span> awaits</h1>
+    <p class="hero-sub">Gifts, clothing &amp; accessories — curated for every occasion</p>
 
-  <!-- Category tabs -->
-  <nav class="cat-tabs">
+    <form class="hero-search" method="GET" action="">
+      <input type="search" name="q" placeholder="Search for gifts, clothing, souvenirs..." autocomplete="off">
+      <button type="submit">🔍 Search</button>
+    </form>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><strong><?= number_format($total) ?>+</strong>Products</div>
+      <div class="hero-stat"><strong><?= count($categories) ?></strong>Categories</div>
+      <div class="hero-stat"><strong>100%</strong>Authentic</div>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ─── Category bar ──────────────────────────────────── -->
+<div class="cat-bar-wrap">
+  <nav class="cat-bar">
     <a href="<?= BASE_URL ?>/public/catalog.php<?= $search ? '?q=' . urlencode($search) : '' ?>"
-       class="cat-tab <?= $catId === 0 ? 'active' : '' ?>">
+       class="cat-btn <?= $catId === 0 ? 'active' : '' ?>">
       All Products
     </a>
-    <?php foreach ($categories as $c): ?>
+    <?php foreach ($categories as $c):
+      $emoji = $catEmojis[strtolower($c['name'])] ?? '🏷';
+    ?>
     <a href="<?= BASE_URL ?>/public/catalog.php?cat=<?= $c['id'] ?><?= $search ? '&q=' . urlencode($search) : '' ?>"
-       class="cat-tab <?= $catId === (int)$c['id'] ? 'active' : '' ?>">
-      <?= e($c['name']) ?>
+       class="cat-btn <?= $catId === (int)$c['id'] ? 'active' : '' ?>">
+      <?= $emoji ?> <?= e($c['name']) ?>
     </a>
     <?php endforeach; ?>
   </nav>
+</div>
 
-  <!-- Result info -->
-  <div class="section-info">
-    <div class="count">
-      <?php if ($search || $catId): ?>
-        <?= number_format($total) ?> result<?= $total != 1 ? 's' : '' ?>
-        <?php if ($search): ?> for "<strong><?= e($search) ?></strong>"<?php endif; ?>
-        <?php if ($catId): ?>
-          <?php foreach ($categories as $c): if ((int)$c['id'] === $catId): ?>
-          in <strong><?= e($c['name']) ?></strong>
-          <?php endif; endforeach; ?>
-        <?php endif; ?>
-        &mdash; <a href="<?= BASE_URL ?>/public/catalog.php">Clear filters</a>
-      <?php else: ?>
-        <?= number_format($total) ?> product<?= $total != 1 ? 's' : '' ?> available
-      <?php endif; ?>
+<!-- ─── Products ─────────────────────────────────────── -->
+<main class="store-wrap">
+
+  <div class="section-hd">
+    <h2>
+      <?= $search ? 'Search Results' : e($activeCatName) ?>
+      <span class="count-pill"><?= number_format($total) ?></span>
+    </h2>
+    <?php if ($search || $catId): ?>
+    <div class="filter-info">
+      <?php if ($search): ?>Showing results for "<strong><?= e($search) ?></strong>"<?php endif; ?>
+      <?php if ($catId && $search): ?> in <strong><?= e($activeCatName) ?></strong><?php elseif ($catId): ?>Browsing <strong><?= e($activeCatName) ?></strong><?php endif; ?>
+      &mdash; <a href="<?= BASE_URL ?>/public/catalog.php">Clear</a>
     </div>
-    <?php if ($pg['total_pages'] > 1): ?>
-    <div class="count">Page <?= $pg['current'] ?> of <?= $pg['total_pages'] ?></div>
     <?php endif; ?>
   </div>
 
-  <!-- Product grid -->
   <?php if (empty($products)): ?>
-  <div class="card">
-    <div class="empty-state">
-      <div class="icon">🎁</div>
-      <h3>No products found</h3>
-      <p>Try a different search or browse all categories.</p>
-      <a href="<?= BASE_URL ?>/public/catalog.php" class="btn btn-primary" style="margin-top:1.25rem">Browse All Products</a>
-    </div>
+  <div class="empty-wrap">
+    <div class="icon">🔍</div>
+    <h3>No products found</h3>
+    <p>Try a different search term or browse a different category.</p>
+    <a href="<?= BASE_URL ?>/public/catalog.php" class="btn btn-primary">Browse All Products</a>
   </div>
 
   <?php else: ?>
@@ -361,40 +649,42 @@ $baseLink = BASE_URL . '/public/catalog.php?q=' . urlencode($search) . '&cat=' .
       $qty = (int)$p['stock_qty'];
       $min = (int)$p['min_stock_level'];
       if ($qty <= 0) {
-          $stockLabel = 'Out of Stock';
-          $stockClass = 'stock-txt-out';
+          $stockLabel = 'Out of Stock'; $stockClass = 'cs-out'; $ribbon = '<span class="card-ribbon">Out of Stock</span>';
       } elseif ($qty <= $min) {
-          $stockLabel = "Low Stock ({$qty} left)";
-          $stockClass = 'stock-txt-low';
+          $stockLabel = "Only {$qty} left"; $stockClass = 'cs-low'; $ribbon = '<span class="card-ribbon low">Low Stock</span>';
       } else {
-          $stockLabel = "In Stock ({$qty})";
-          $stockClass = 'stock-txt-ok';
+          $stockLabel = 'In Stock'; $stockClass = 'cs-ok'; $ribbon = '';
       }
     ?>
     <a href="<?= BASE_URL ?>/public/product.php?id=<?= $p['id'] ?>" class="product-card">
-      <?php if ($p['image'] && file_exists(UPLOAD_PATH . '/' . $p['image'])): ?>
-        <img src="<?= UPLOAD_URL ?>/<?= e($p['image']) ?>" class="product-card-img" alt="<?= e($p['name']) ?>">
-      <?php else: ?>
-        <div class="product-card-placeholder"><?= productEmoji($p['category_name'] ?? '', $p['type']) ?></div>
-      <?php endif; ?>
-
-      <div class="product-card-body">
-        <?php if ($p['category_name']): ?>
-        <div class="product-card-cat"><?= e($p['category_name']) ?></div>
+      <div class="card-img-wrap">
+        <?php if ($p['image'] && file_exists(UPLOAD_PATH . '/' . $p['image'])): ?>
+          <img src="<?= UPLOAD_URL ?>/<?= e($p['image']) ?>" alt="<?= e($p['name']) ?>">
+        <?php else: ?>
+          <div class="card-placeholder"><?= productEmoji($p['category_name'] ?? '', $p['type']) ?></div>
         <?php endif; ?>
-        <div class="product-card-name"><?= e($p['name']) ?></div>
-        <div class="product-card-price"><?= formatCurrency((float)$p['selling_price']) ?></div>
-        <div class="product-card-stock <?= $stockClass ?>">● <?= $stockLabel ?></div>
+        <div class="card-overlay"><div class="card-overlay-btn">View Details</div></div>
+        <?= $ribbon ?>
+      </div>
+
+      <div class="card-body">
+        <?php if ($p['category_name']): ?>
+        <div class="card-cat"><?= e($p['category_name']) ?></div>
+        <?php endif; ?>
+        <div class="card-name"><?= e($p['name']) ?></div>
+        <div class="card-footer">
+          <div class="card-price"><?= formatCurrency((float)$p['selling_price']) ?></div>
+          <span class="card-stock <?= $stockClass ?>"><?= $stockLabel ?></span>
+        </div>
       </div>
     </a>
     <?php endforeach; ?>
   </div>
 
-  <!-- Pagination -->
   <?php if ($pg['total_pages'] > 1): ?>
-  <div class="pagination-row">
-    <div class="text-muted fs-sm">
-      Showing <?= $pg['offset'] + 1 ?>–<?= min($pg['offset'] + $pg['per_page'], $total) ?> of <?= number_format($total) ?>
+  <div class="pg-row">
+    <div class="pg-info">
+      Showing <?= $pg['offset'] + 1 ?>–<?= min($pg['offset'] + $pg['per_page'], $total) ?> of <?= number_format($total) ?> products
     </div>
     <?= paginationLinks($pg, $baseLink) ?>
   </div>
@@ -403,8 +693,37 @@ $baseLink = BASE_URL . '/public/catalog.php?q=' . urlencode($search) . '&cat=' .
   <?php endif; ?>
 </main>
 
-<footer class="pub-footer">
-  &copy; <?= date('Y') ?> <?= e(APP_NAME) ?> &mdash; All prices in <?= CURRENCY_CODE ?>
+<!-- ─── Footer ────────────────────────────────────────── -->
+<footer class="store-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">
+        <div class="footer-brand-icon">🎁</div>
+        <?= APP_NAME ?>
+      </div>
+      <p class="footer-desc">Your one-stop destination for thoughtful gifts, trendy clothing, and unique souvenirs. Every purchase is special.</p>
+    </div>
+
+    <div class="footer-col">
+      <h4>Browse</h4>
+      <a href="<?= BASE_URL ?>/public/catalog.php">All Products</a>
+      <?php foreach ($categories as $c): ?>
+      <a href="<?= BASE_URL ?>/public/catalog.php?cat=<?= $c['id'] ?>"><?= e($c['name']) ?></a>
+      <?php endforeach; ?>
+    </div>
+
+    <div class="footer-col">
+      <h4>Info</h4>
+      <a href="<?= BASE_URL ?>/public/catalog.php">New Arrivals</a>
+      <a href="<?= BASE_URL ?>/public/catalog.php?cat=5">Seasonal Gifts</a>
+      <a href="<?= BASE_URL ?>/login.php">Staff Login</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>&copy; <?= date('Y') ?> <?= e(APP_NAME) ?>. All rights reserved.</span>
+    <span>All prices in <?= CURRENCY_CODE ?></span>
+  </div>
 </footer>
 
 </body>

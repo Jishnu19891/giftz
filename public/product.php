@@ -26,20 +26,36 @@ if (!$product) {
     exit;
 }
 
+// Related products (same category, exclude self)
+$related = [];
+if ($product['category_id']) {
+    $rs = $pdo->prepare("
+        SELECT p.*, c.name AS category_name
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        WHERE p.category_id = ? AND p.id != ? AND p.status = 'active'
+        ORDER BY RAND() LIMIT 4
+    ");
+    $rs->execute([$product['category_id'], $id]);
+    $related = $rs->fetchAll();
+}
+
 $qty = (int)$product['stock_qty'];
 $min = (int)$product['min_stock_level'];
 if ($qty <= 0) {
     $stockLabel = 'Out of Stock';
     $stockBadge = 'stock-out';
+    $stockIcon  = '✕';
 } elseif ($qty <= $min) {
-    $stockLabel = "{$qty} unit" . ($qty != 1 ? 's' : '') . ' remaining — Low Stock';
+    $stockLabel = "Only {$qty} unit" . ($qty != 1 ? 's' : '') . ' left — Low Stock';
     $stockBadge = 'stock-low';
+    $stockIcon  = '⚠';
 } else {
     $stockLabel = "{$qty} unit" . ($qty != 1 ? 's' : '') . ' in stock';
     $stockBadge = 'stock-ok';
+    $stockIcon  = '●';
 }
 
-// Ref to come back with same category filter
 $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
 ?>
 <!DOCTYPE html>
@@ -51,187 +67,273 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 
   <style>
-    body { background: var(--body-bg); }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: #F4F6FB; color: var(--text-primary); }
 
-    /* ─── Header ─────────────────────────────────────────── */
-    .pub-header {
-      background: var(--sidebar-bg);
-      color: #fff;
-      padding: 0 2rem;
-      height: 66px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
+    /* ─── Navbar ─────────────────────────────────────────── */
+    .navbar {
       position: sticky;
       top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 16px rgba(0,0,0,.35);
-    }
-
-    .pub-brand {
+      z-index: 200;
+      background: var(--sidebar-bg);
+      height: 62px;
       display: flex;
       align-items: center;
-      gap: .75rem;
+      padding: 0 2rem;
+      gap: 1.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,.4);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
       color: #fff;
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 1.1rem;
       text-decoration: none;
       flex-shrink: 0;
     }
-
-    .pub-brand-icon {
-      width: 38px; height: 38px;
+    .nav-brand-icon {
+      width: 34px; height: 34px;
       background: linear-gradient(135deg, var(--accent), var(--secondary));
-      border-radius: 10px;
+      border-radius: 9px;
       display: grid;
       place-items: center;
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
+    .nav-back {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: rgba(255,255,255,.65);
+      font-size: .83rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: .4rem .85rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.15);
+      transition: background .2s, color .2s;
+      flex-shrink: 0;
+    }
+    .nav-back:hover { background: rgba(255,255,255,.1); color: #fff; }
 
-    /* ─── Wrapper ─────────────────────────────────────────── */
-    .pub-wrap {
-      max-width: 960px;
+    /* ─── Page wrapper ───────────────────────────────────── */
+    .page-wrap {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 2rem 2rem 3rem;
+      padding: 2rem 2rem 4rem;
     }
 
     /* ─── Breadcrumb ──────────────────────────────────────── */
-    .pub-breadcrumb {
+    .breadcrumb {
       display: flex;
       align-items: center;
       gap: .4rem;
-      font-size: .85rem;
+      font-size: .82rem;
       color: var(--text-muted);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
       flex-wrap: wrap;
     }
-    .pub-breadcrumb a { color: var(--text-muted); text-decoration: none; }
-    .pub-breadcrumb a:hover { color: var(--accent); }
-    .pub-breadcrumb .sep { color: var(--border); }
-    .pub-breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+    .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb .sep { color: #D1D5DB; }
+    .breadcrumb .current { color: var(--text-primary); font-weight: 500; }
 
-    /* ─── Product detail layout ───────────────────────────── */
-    .product-detail {
+    /* ─── Product detail card ────────────────────────────── */
+    .product-card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 2px 20px rgba(0,0,0,.07);
+      border: 1px solid var(--border);
+      overflow: hidden;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 2.5rem;
-      align-items: start;
     }
 
-    .product-img-wrap { position: relative; }
-
-    .product-detail-img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      border-radius: 14px;
-      box-shadow: var(--shadow-lg);
-      display: block;
-    }
-
-    .product-detail-placeholder {
-      width: 100%;
-      aspect-ratio: 1;
-      background: linear-gradient(135deg, #F3F4F6, #E9EBF0);
+    /* Image panel */
+    .img-panel {
+      background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
       display: grid;
       place-items: center;
-      font-size: 5rem;
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      color: var(--text-muted);
+      padding: 2.5rem;
+      min-height: 420px;
+    }
+    .img-panel img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+    }
+    .img-placeholder {
+      font-size: 7rem;
+      opacity: .6;
+      user-select: none;
     }
 
-    /* ─── Info panel ──────────────────────────────────────── */
-    .product-detail-info {
+    /* Info panel */
+    .info-panel {
+      padding: 2.5rem;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.1rem;
     }
-
-    .product-detail-cat {
-      font-size: .78rem;
-      font-weight: 600;
+    .info-cat {
+      font-size: .72rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .07em;
+      letter-spacing: .08em;
       color: var(--accent);
     }
-
-    .product-detail-name {
+    .info-name {
       font-size: 1.85rem;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.2;
-      color: var(--text-primary);
-    }
-
-    .product-detail-price {
-      font-size: 2.1rem;
-      font-weight: 700;
-      color: var(--accent);
       letter-spacing: -.02em;
     }
+    .info-price {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -.03em;
+    }
+    .info-stock {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: .4em .9em;
+      border-radius: 100px;
+    }
+    .stock-ok  { background: rgba(16,185,129,.1);  color: var(--success); }
+    .stock-low { background: rgba(245,158,11,.1);  color: var(--warning); }
+    .stock-out { background: rgba(239,68,68,.1);   color: var(--danger);  }
 
-    /* ─── Meta table ──────────────────────────────────────── */
-    .detail-meta {
+    /* Meta table */
+    .info-meta {
       background: #F9FAFB;
-      border-radius: var(--radius);
+      border-radius: 12px;
       border: 1px solid var(--border);
       overflow: hidden;
     }
-
-    .detail-meta-row {
+    .meta-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: .7rem 1rem;
-      font-size: .875rem;
+      padding: .7rem 1.1rem;
+      font-size: .86rem;
       border-bottom: 1px solid var(--border);
     }
-    .detail-meta-row:last-child { border-bottom: none; }
-    .detail-meta-label { color: var(--text-muted); }
-    .detail-meta-value { font-weight: 500; color: var(--text-primary); }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { color: var(--text-muted); }
+    .meta-value { font-weight: 600; }
 
-    /* ─── Footer ─────────────────────────────────────────── */
-    .pub-footer {
-      text-align: center;
-      padding: 1.5rem 2rem;
-      font-size: .82rem;
-      color: var(--text-muted);
-      border-top: 1px solid var(--border);
+    .info-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .25rem; }
+    .btn-store-back {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .7rem 1.4rem;
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: .88rem;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    }
+    .btn-store-back:hover { background: var(--accent); color: #fff; }
+
+    /* ─── Related products ───────────────────────────────── */
+    .related-section { margin-top: 3rem; }
+    .related-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+    }
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 1.25rem;
     }
 
+    /* Mini product card (same as catalog) */
+    .mini-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .mini-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.11); color: inherit; }
+    .mini-img {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
+      display: grid;
+      place-items: center;
+      font-size: 2.5rem;
+      overflow: hidden;
+    }
+    .mini-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mini-body { padding: .85rem 1rem; flex: 1; display: flex; flex-direction: column; gap: .2rem; }
+    .mini-cat  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+    .mini-name { font-size: .88rem; font-weight: 600; line-height: 1.3; }
+    .mini-price{ font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-top: .4rem; }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .store-footer {
+      background: var(--sidebar-bg);
+      color: rgba(255,255,255,.4);
+      text-align: center;
+      padding: 1.5rem 2rem;
+      font-size: .8rem;
+      margin-top: 2rem;
+    }
+    .store-footer a { color: rgba(255,255,255,.55); text-decoration: none; }
+    .store-footer a:hover { color: #fff; }
+
     /* ─── Responsive ─────────────────────────────────────── */
-    @media (max-width: 700px) {
-      .pub-header         { padding: 0 1rem; }
-      .pub-wrap           { padding: 1.25rem 1rem 2rem; }
-      .product-detail     { grid-template-columns: 1fr; gap: 1.5rem; }
-      .product-detail-name  { font-size: 1.5rem; }
-      .product-detail-price { font-size: 1.65rem; }
+    @media (max-width: 800px) {
+      .product-card { grid-template-columns: 1fr; }
+      .img-panel { min-height: 280px; padding: 2rem; }
+      .info-panel { padding: 1.75rem; }
+      .info-name  { font-size: 1.5rem; }
+      .info-price { font-size: 1.75rem; }
+    }
+    @media (max-width: 640px) {
+      .navbar    { padding: 0 1rem; }
+      .page-wrap { padding: 1.25rem 1rem 3rem; }
+      .related-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
 
-<!-- ─── Header ─────────────────────────────────────────── -->
-<header class="pub-header">
-  <a href="<?= BASE_URL ?>/public/catalog.php" class="pub-brand">
-    <div class="pub-brand-icon">🎁</div>
-    <span><?= APP_NAME ?></span>
+<!-- ─── Navbar ────────────────────────────────────────── -->
+<header class="navbar">
+  <a href="<?= BASE_URL ?>/public/catalog.php" class="nav-brand">
+    <div class="nav-brand-icon">🎁</div>
+    <?= APP_NAME ?>
   </a>
-  <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="btn btn-secondary btn-sm" style="flex-shrink:0">
-    ← Back to Catalog
-  </a>
+  <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="nav-back">← Back to Catalog</a>
 </header>
 
-<!-- ─── Main ───────────────────────────────────────────── -->
-<main class="pub-wrap">
+<!-- ─── Main ─────────────────────────────────────────── -->
+<main class="page-wrap">
 
   <!-- Breadcrumb -->
-  <nav class="pub-breadcrumb">
+  <nav class="breadcrumb">
     <a href="<?= BASE_URL ?>/public/catalog.php">All Products</a>
     <?php if ($product['category_name']): ?>
     <span class="sep">›</span>
@@ -241,85 +343,100 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
     <span class="current"><?= e($product['name']) ?></span>
   </nav>
 
-  <!-- Product card -->
-  <div class="card">
-    <div class="card-body">
-      <div class="product-detail">
+  <!-- Product detail -->
+  <div class="product-card">
 
-        <!-- Image -->
-        <div class="product-img-wrap">
-          <?php if ($product['image'] && file_exists(UPLOAD_PATH . '/' . $product['image'])): ?>
-            <img
-              src="<?= UPLOAD_URL ?>/<?= e($product['image']) ?>"
-              class="product-detail-img"
-              alt="<?= e($product['name']) ?>"
-            >
-          <?php else: ?>
-            <div class="product-detail-placeholder"><?= productEmoji($product['category_name'] ?? '', $product['type']) ?></div>
-          <?php endif; ?>
+    <!-- Image -->
+    <div class="img-panel">
+      <?php if ($product['image'] && file_exists(UPLOAD_PATH . '/' . $product['image'])): ?>
+        <img src="<?= UPLOAD_URL ?>/<?= e($product['image']) ?>" alt="<?= e($product['name']) ?>">
+      <?php else: ?>
+        <div class="img-placeholder"><?= productEmoji($product['category_name'] ?? '', $product['type']) ?></div>
+      <?php endif; ?>
+    </div>
+
+    <!-- Info -->
+    <div class="info-panel">
+      <?php if ($product['category_name']): ?>
+      <div class="info-cat"><?= e($product['category_name']) ?></div>
+      <?php endif; ?>
+
+      <h1 class="info-name"><?= e($product['name']) ?></h1>
+
+      <div class="info-price"><?= formatCurrency((float)$product['selling_price']) ?></div>
+
+      <div>
+        <span class="info-stock <?= $stockBadge ?>">
+          <?= $stockIcon ?> <?= e($stockLabel) ?>
+        </span>
+      </div>
+
+      <div class="info-meta">
+        <div class="meta-row">
+          <span class="meta-label">SKU</span>
+          <span class="meta-value"><?= e($product['sku']) ?></span>
         </div>
-
-        <!-- Info -->
-        <div class="product-detail-info">
-          <?php if ($product['category_name']): ?>
-          <div class="product-detail-cat"><?= e($product['category_name']) ?></div>
-          <?php endif; ?>
-
-          <h1 class="product-detail-name"><?= e($product['name']) ?></h1>
-
-          <div class="product-detail-price"><?= formatCurrency((float)$product['selling_price']) ?></div>
-
-          <div>
-            <span class="badge <?= $stockBadge ?>">
-              <?= $stockBadge === 'stock-ok' ? '● ' : ($stockBadge === 'stock-low' ? '⚠ ' : '✕ ') ?><?= e($stockLabel) ?>
-            </span>
-          </div>
-
-          <!-- Meta details -->
-          <div class="detail-meta">
-            <div class="detail-meta-row">
-              <span class="detail-meta-label">SKU</span>
-              <span class="detail-meta-value"><?= e($product['sku']) ?></span>
-            </div>
-            <div class="detail-meta-row">
-              <span class="detail-meta-label">Type</span>
-              <span class="detail-meta-value"><?= ucfirst(e($product['type'])) ?></span>
-            </div>
-            <?php if (!empty($product['size'])): ?>
-            <div class="detail-meta-row">
-              <span class="detail-meta-label">Size</span>
-              <span class="detail-meta-value"><?= e($product['size']) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php if (!empty($product['color'])): ?>
-            <div class="detail-meta-row">
-              <span class="detail-meta-label">Color</span>
-              <span class="detail-meta-value"><?= e($product['color']) ?></span>
-            </div>
-            <?php endif; ?>
-            <?php if (!empty($product['occasion'])): ?>
-            <div class="detail-meta-row">
-              <span class="detail-meta-label">Occasion</span>
-              <span class="detail-meta-value"><?= e($product['occasion']) ?></span>
-            </div>
-            <?php endif; ?>
-          </div>
-
-          <div>
-            <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="btn btn-outline">
-              ← Browse More Products
-            </a>
-          </div>
+        <div class="meta-row">
+          <span class="meta-label">Type</span>
+          <span class="meta-value"><?= ucfirst(e($product['type'])) ?></span>
         </div>
+        <?php if (!empty($product['size'])): ?>
+        <div class="meta-row">
+          <span class="meta-label">Size</span>
+          <span class="meta-value"><?= e($product['size']) ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if (!empty($product['color'])): ?>
+        <div class="meta-row">
+          <span class="meta-label">Color</span>
+          <span class="meta-value"><?= e($product['color']) ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if (!empty($product['occasion'])): ?>
+        <div class="meta-row">
+          <span class="meta-label">Occasion</span>
+          <span class="meta-value"><?= e($product['occasion']) ?></span>
+        </div>
+        <?php endif; ?>
+      </div>
 
+      <div class="info-actions">
+        <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="btn-store-back">← Browse More</a>
       </div>
     </div>
   </div>
 
+  <!-- Related products -->
+  <?php if (!empty($related)): ?>
+  <div class="related-section">
+    <div class="related-title">More from <?= e($product['category_name'] ?? 'our store') ?></div>
+    <div class="related-grid">
+      <?php foreach ($related as $r): ?>
+      <a href="<?= BASE_URL ?>/public/product.php?id=<?= $r['id'] ?>" class="mini-card">
+        <div class="mini-img">
+          <?php if ($r['image'] && file_exists(UPLOAD_PATH . '/' . $r['image'])): ?>
+            <img src="<?= UPLOAD_URL ?>/<?= e($r['image']) ?>" alt="<?= e($r['name']) ?>">
+          <?php else: ?>
+            <?= productEmoji($r['category_name'] ?? '', $r['type']) ?>
+          <?php endif; ?>
+        </div>
+        <div class="mini-body">
+          <?php if ($r['category_name']): ?><div class="mini-cat"><?= e($r['category_name']) ?></div><?php endif; ?>
+          <div class="mini-name"><?= e($r['name']) ?></div>
+          <div class="mini-price"><?= formatCurrency((float)$r['selling_price']) ?></div>
+        </div>
+      </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endif; ?>
+
 </main>
 
-<footer class="pub-footer">
+<!-- ─── Footer ────────────────────────────────────────── -->
+<footer class="store-footer">
   &copy; <?= date('Y') ?> <?= e(APP_NAME) ?> &mdash; All prices in <?= CURRENCY_CODE ?>
+  &nbsp;·&nbsp; <a href="<?= BASE_URL ?>/public/catalog.php">Back to Store</a>
 </footer>
 
 </body>
