@@ -362,15 +362,22 @@ foreach ($categories as $c) {
       color: inherit;
     }
 
-    /* Image area */
+    /* Image area — padding-top trick ensures square on all browsers */
     .card-img-wrap {
       position: relative;
+      width: 100%;
+      padding-top: 100%;
       overflow: hidden;
-      aspect-ratio: 1;
       background: #F3F4F6;
     }
-    .card-img-wrap img {
+    .card-img-wrap img,
+    .card-img-wrap .card-placeholder,
+    .card-img-wrap .card-overlay {
+      position: absolute;
+      top: 0; left: 0;
       width: 100%; height: 100%;
+    }
+    .card-img-wrap img {
       object-fit: cover;
       display: block;
       transition: transform .35s ease;
@@ -378,12 +385,12 @@ foreach ($categories as $c) {
     .product-card:hover .card-img-wrap img { transform: scale(1.06); }
 
     .card-placeholder {
-      width: 100%; height: 100%;
       display: grid;
       place-items: center;
       font-size: 3.5rem;
       background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
       transition: transform .35s ease;
+      top: 0; left: 0; width: 100%; height: 100%;
     }
     .product-card:hover .card-placeholder { transform: scale(1.08); }
 

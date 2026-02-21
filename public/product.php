@@ -155,22 +155,27 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
       grid-template-columns: 1fr 1fr;
     }
 
-    /* Image panel */
+    /* Image panel — square, uniform */
     .img-panel {
+      position: relative;
+      width: 100%;
+      padding-top: 100%;   /* enforce 1:1 square */
       background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
-      display: grid;
-      place-items: center;
-      padding: 2.5rem;
-      min-height: 420px;
+      overflow: hidden;
     }
     .img-panel img {
-      width: 100%;
-      max-height: 400px;
-      object-fit: contain;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .img-placeholder {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: grid;
+      place-items: center;
       font-size: 7rem;
       opacity: .6;
       user-select: none;
@@ -278,14 +283,20 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
     }
     .mini-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.11); color: inherit; }
     .mini-img {
-      aspect-ratio: 1;
+      position: relative;
+      width: 100%;
+      padding-top: 100%;
       background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
-      display: grid;
-      place-items: center;
-      font-size: 2.5rem;
       overflow: hidden;
     }
-    .mini-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mini-img img,
+    .mini-img > span {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .mini-img img { object-fit: cover; display: block; }
+    .mini-img > span { display: grid; place-items: center; font-size: 2.5rem; }
     .mini-body { padding: .85rem 1rem; flex: 1; display: flex; flex-direction: column; gap: .2rem; }
     .mini-cat  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
     .mini-name { font-size: .88rem; font-weight: 600; line-height: 1.3; }
@@ -306,7 +317,7 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
     /* ─── Responsive ─────────────────────────────────────── */
     @media (max-width: 800px) {
       .product-card { grid-template-columns: 1fr; }
-      .img-panel { min-height: 280px; padding: 2rem; }
+      .img-panel { padding-top: 100%; }
       .info-panel { padding: 1.75rem; }
       .info-name  { font-size: 1.5rem; }
       .info-price { font-size: 1.75rem; }
@@ -417,7 +428,7 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
           <?php if ($r['image'] && file_exists(UPLOAD_PATH . '/' . $r['image'])): ?>
             <img src="<?= UPLOAD_URL ?>/<?= e($r['image']) ?>" alt="<?= e($r['name']) ?>">
           <?php else: ?>
-            <?= productEmoji($r['category_name'] ?? '', $r['type']) ?>
+            <span><?= productEmoji($r['category_name'] ?? '', $r['type']) ?></span>
           <?php endif; ?>
         </div>
         <div class="mini-body">
