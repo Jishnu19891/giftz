@@ -58,6 +58,17 @@ $announcements = $pdo->query(
     "SELECT emoji, message FROM announcements WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
 )->fetchAll();
 
+// 4 featured products for hero showcase (one per category, with images)
+$heroProducts = $pdo->query("
+    SELECT p.id, p.name, p.selling_price, p.image, c.name AS category_name
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    WHERE p.status = 'active' AND p.image IS NOT NULL AND p.image != ''
+    GROUP BY p.category_id
+    ORDER BY RAND()
+    LIMIT 4
+")->fetchAll();
+
 // Active category name
 $activeCatName = 'All Products';
 foreach ($categories as $c) {
@@ -165,104 +176,204 @@ foreach ($categories as $c) {
 
     /* ─── Hero ───────────────────────────────────────────── */
     .hero {
-      background: linear-gradient(135deg, #1A1D2E 0%, #2D2563 50%, #3D1A5C 100%);
-      padding: 4rem 2rem 3.5rem;
-      text-align: center;
+      background: linear-gradient(135deg, #0F1120 0%, #1E1760 45%, #2E1250 100%);
       position: relative;
       overflow: hidden;
+      padding-bottom: 0;
     }
-    .hero::before {
-      content: '';
+
+    /* Animated background blobs */
+    .hero-blob {
       position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 20% 50%, rgba(108,99,255,.25) 0%, transparent 50%),
-        radial-gradient(circle at 80% 30%, rgba(255,101,132,.2) 0%, transparent 45%);
+      border-radius: 50%;
+      filter: blur(70px);
       pointer-events: none;
+      animation: blobPulse 7s ease-in-out infinite;
     }
-    .hero-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .hero-blob-1 { width: 500px; height: 500px; background: rgba(108,99,255,.22); top: -100px; left: -100px; animation-delay: 0s; }
+    .hero-blob-2 { width: 400px; height: 400px; background: rgba(255,101,132,.18); top: 50px; right: -80px; animation-delay: 2.5s; }
+    .hero-blob-3 { width: 300px; height: 300px; background: rgba(139,92,246,.2); bottom: 0; left: 40%; animation-delay: 5s; }
+    @keyframes blobPulse {
+      0%, 100% { transform: scale(1) translate(0, 0); opacity: .8; }
+      50%       { transform: scale(1.12) translate(15px, -10px); opacity: 1; }
+    }
+
+    /* Floating emoji decorations */
+    .hero-floats { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .hero-floats span {
+      position: absolute;
+      font-size: 1.8rem;
+      opacity: .12;
+      animation: floatUp 6s ease-in-out infinite;
+    }
+    .hero-floats span:nth-child(1) { left: 6%;  top: 18%; animation-delay: 0s;   }
+    .hero-floats span:nth-child(2) { left: 18%; top: 72%; animation-delay: 1.4s; }
+    .hero-floats span:nth-child(3) { left: 88%; top: 12%; animation-delay: 0.7s; }
+    .hero-floats span:nth-child(4) { left: 80%; top: 68%; animation-delay: 2.1s; }
+    .hero-floats span:nth-child(5) { left: 50%; top: 8%;  animation-delay: 3.5s; }
+    @keyframes floatUp {
+      0%, 100% { transform: translateY(0) rotate(0deg);   opacity: .12; }
+      50%       { transform: translateY(-18px) rotate(8deg); opacity: .22; }
+    }
+
+    /* Two-column layout */
+    .hero-layout {
+      position: relative;
+      z-index: 2;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    /* Left: content */
+    .hero-content { display: flex; flex-direction: column; gap: 1.5rem; }
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: .4rem;
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.15);
+      gap: .5rem;
+      background: rgba(108,99,255,.25);
+      border: 1px solid rgba(108,99,255,.4);
       border-radius: 100px;
-      padding: .3rem .9rem;
+      padding: .35rem 1rem;
       font-size: .75rem;
-      font-weight: 600;
-      color: rgba(255,255,255,.8);
-      letter-spacing: .04em;
+      font-weight: 700;
+      color: #C4BEFF;
+      letter-spacing: .06em;
       text-transform: uppercase;
-      margin-bottom: 1.25rem;
+      width: fit-content;
     }
     .hero h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
       font-weight: 800;
       color: #fff;
-      line-height: 1.15;
-      margin-bottom: .75rem;
-      letter-spacing: -.02em;
+      line-height: 1.12;
+      letter-spacing: -.03em;
+      margin: 0;
     }
-    .hero h1 span {
-      background: linear-gradient(90deg, var(--accent-light), var(--secondary));
+    .hero h1 .grad {
+      background: linear-gradient(90deg, #A78BFA, #F472B6, #FB923C);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .hero-sub {
-      font-size: 1.05rem;
-      color: rgba(255,255,255,.6);
-      margin-bottom: 2rem;
-      line-height: 1.6;
+      font-size: 1rem;
+      color: rgba(255,255,255,.55);
+      line-height: 1.7;
+      max-width: 420px;
     }
 
-    /* Hero search */
+    /* Search bar */
     .hero-search {
       display: flex;
-      background: #fff;
+      background: rgba(255,255,255,.07);
+      border: 1.5px solid rgba(255,255,255,.15);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 8px 40px rgba(0,0,0,.35);
-      max-width: 560px;
-      margin: 0 auto;
+      backdrop-filter: blur(10px);
+      max-width: 480px;
+      transition: border-color .2s;
     }
+    .hero-search:focus-within { border-color: rgba(108,99,255,.7); }
     .hero-search input {
       flex: 1;
-      border: none;
-      padding: .95rem 1.25rem;
-      font-size: .95rem;
-      font-family: inherit;
-      color: var(--text-primary);
-      outline: none;
       background: transparent;
+      border: none;
+      padding: .9rem 1.1rem;
+      font-size: .9rem;
+      font-family: inherit;
+      color: #fff;
+      outline: none;
     }
-    .hero-search input::placeholder { color: var(--text-muted); }
+    .hero-search input::placeholder { color: rgba(255,255,255,.35); }
     .hero-search button {
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      background: linear-gradient(135deg, var(--accent), #7C3AED);
       color: #fff;
       border: none;
-      padding: 0 1.5rem;
-      font-size: .9rem;
+      padding: 0 1.3rem;
+      font-size: .88rem;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      transition: opacity .2s;
       display: flex;
       align-items: center;
       gap: .4rem;
       white-space: nowrap;
+      transition: opacity .2s;
     }
-    .hero-search button:hover { opacity: .9; }
+    .hero-search button:hover { opacity: .88; }
 
+    /* Stats row */
     .hero-stats {
       display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-top: 2rem;
+      gap: 1.5rem;
+      padding-top: .5rem;
     }
-    .hero-stat { color: rgba(255,255,255,.55); font-size: .82rem; }
-    .hero-stat strong { color: #fff; display: block; font-size: 1.1rem; font-weight: 700; }
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+    }
+    .hero-stat strong { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+    .hero-stat span   { font-size: .72rem; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .05em; }
+
+    /* Divider between stats */
+    .hero-stat + .hero-stat { padding-left: 1.5rem; border-left: 1px solid rgba(255,255,255,.1); }
+
+    /* Right: product showcase */
+    .hero-showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .showcase-card {
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 1;
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+      transition: transform .3s ease;
+    }
+    .showcase-card:nth-child(2) { margin-top: 2rem; }
+    .showcase-card:nth-child(4) { margin-top: -2rem; }
+    .showcase-card:hover { transform: scale(1.04); }
+    .showcase-card img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .showcase-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 55%);
+      display: flex;
+      align-items: flex-end;
+      padding: .85rem;
+    }
+    .showcase-card-label {
+      font-size: .72rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+    .showcase-card-price {
+      font-size: .82rem;
+      font-weight: 800;
+      color: #C4BEFF;
+      margin-top: .1rem;
+    }
+
+    /* Wave divider */
+    .hero-wave {
+      position: relative;
+      z-index: 2;
+      line-height: 0;
+    }
+    .hero-wave svg { display: block; width: 100%; }
 
     /* ─── Category bar ───────────────────────────────────── */
     .cat-bar-wrap {
@@ -644,8 +755,11 @@ foreach ($categories as $c) {
     @media (max-width: 640px) {
       .navbar { padding: 0 1rem; }
       .nav-tagline { display: none; }
-      .hero { padding: 2.5rem 1rem 2rem; }
-      .hero-stats { gap: 1.25rem; }
+      .hero-layout { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1rem 0; }
+      .hero-showcase { display: none; }
+      .hero h1 { font-size: 2rem; }
+      .hero-stats { gap: 1rem; }
+      .hero-stat + .hero-stat { padding-left: 1rem; }
       .cat-bar { padding: 0 1rem; }
       .store-wrap { padding: 1.5rem 1rem 3rem; }
       .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
@@ -697,22 +811,81 @@ foreach ($categories as $c) {
 <!-- ─── Hero (shown only on the unfiltered landing) ─── -->
 <?php if (!$search && !$catId && $page === 1): ?>
 <section class="hero">
-  <div class="hero-inner">
-    <div class="hero-badge">🎁 New arrivals every week</div>
-    <h1>Your perfect <span>gift</span> awaits</h1>
-    <p class="hero-sub">Gifts, clothing &amp; accessories — curated for every occasion</p>
 
-    <form class="hero-search" method="GET" action="">
-      <input type="search" name="q" placeholder="Search for gifts, clothing, souvenirs..." autocomplete="off">
-      <button type="submit">🔍 Search</button>
-    </form>
+  <!-- Background blobs -->
+  <div class="hero-blob hero-blob-1"></div>
+  <div class="hero-blob hero-blob-2"></div>
+  <div class="hero-blob hero-blob-3"></div>
 
-    <div class="hero-stats">
-      <div class="hero-stat"><strong><?= number_format($total) ?>+</strong>Products</div>
-      <div class="hero-stat"><strong><?= count($categories) ?></strong>Categories</div>
-      <div class="hero-stat"><strong>100%</strong>Authentic</div>
-    </div>
+  <!-- Floating emoji decorations -->
+  <div class="hero-floats" aria-hidden="true">
+    <span>🎁</span><span>🎀</span><span>🎄</span><span>💝</span><span>✨</span>
   </div>
+
+  <!-- Two-column layout -->
+  <div class="hero-layout">
+
+    <!-- Left: content -->
+    <div class="hero-content">
+      <div class="hero-badge">✨ New arrivals every week</div>
+
+      <h1>Find the <span class="grad">Perfect Gift</span><br>for Everyone</h1>
+
+      <p class="hero-sub">Thoughtful gifts, trendy clothing &amp; unique accessories — curated for every occasion and budget.</p>
+
+      <form class="hero-search" method="GET" action="">
+        <input type="search" name="q" placeholder="Search gifts, clothing, souvenirs..." autocomplete="off">
+        <button type="submit">🔍 Search</button>
+      </form>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <strong><?= number_format($total) ?>+</strong>
+          <span>Products</span>
+        </div>
+        <div class="hero-stat">
+          <strong><?= count($categories) ?></strong>
+          <span>Categories</span>
+        </div>
+        <div class="hero-stat">
+          <strong>100%</strong>
+          <span>Authentic</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: product showcase -->
+    <?php if (!empty($heroProducts)): ?>
+    <div class="hero-showcase">
+      <?php foreach ($heroProducts as $hp): ?>
+      <a href="<?= BASE_URL ?>/public/product.php?id=<?= $hp['id'] ?>" class="showcase-card">
+        <?php if ($hp['image'] && file_exists(UPLOAD_PATH . '/' . $hp['image'])): ?>
+          <img src="<?= UPLOAD_URL ?>/<?= e($hp['image']) ?>" alt="<?= e($hp['name']) ?>">
+        <?php else: ?>
+          <div style="width:100%;height:100%;background:rgba(255,255,255,.05);display:grid;place-items:center;font-size:3rem">
+            <?= productEmoji($hp['category_name'] ?? '', '') ?>
+          </div>
+        <?php endif; ?>
+        <div class="showcase-card-overlay">
+          <div>
+            <div class="showcase-card-label"><?= e($hp['name']) ?></div>
+            <div class="showcase-card-price"><?= formatCurrency((float)$hp['selling_price']) ?></div>
+          </div>
+        </div>
+      </a>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+  </div>
+
+  <!-- Wave transition -->
+  <div class="hero-wave">
+    <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#ffffff"/>
+    </svg>
+  </div>
+
 </section>
 <?php endif; ?>
 
