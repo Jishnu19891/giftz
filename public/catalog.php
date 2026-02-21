@@ -375,7 +375,7 @@ $baseLink = BASE_URL . '/public/catalog.php?q=' . urlencode($search) . '&cat=' .
       <?php if ($p['image'] && file_exists(UPLOAD_PATH . '/' . $p['image'])): ?>
         <img src="<?= UPLOAD_URL ?>/<?= e($p['image']) ?>" class="product-card-img" alt="<?= e($p['name']) ?>">
       <?php else: ?>
-        <div class="product-card-placeholder">🎁</div>
+        <div class="product-card-placeholder"><?= productEmoji($p['category_name'] ?? '', $p['type']) ?></div>
       <?php endif; ?>
 
       <div class="product-card-body">

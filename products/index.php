@@ -122,7 +122,7 @@ require dirname(__DIR__) . '/includes/header.php';
                             <?php if ($p['image'] && file_exists(UPLOAD_PATH . '/' . $p['image'])): ?>
                             <img src="<?= UPLOAD_URL ?>/<?= e($p['image']) ?>" class="product-thumb" alt="">
                             <?php else: ?>
-                            <div class="product-thumb-placeholder">🎁</div>
+                            <div class="product-thumb-placeholder"><?= productEmoji($p['category_name'] ?? '', $p['type']) ?></div>
                             <?php endif; ?>
                             <div class="product-name"><?= e($p['name']) ?></div>
                         </div>

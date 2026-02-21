@@ -255,7 +255,7 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
               alt="<?= e($product['name']) ?>"
             >
           <?php else: ?>
-            <div class="product-detail-placeholder">🎁</div>
+            <div class="product-detail-placeholder"><?= productEmoji($product['category_name'] ?? '', $product['type']) ?></div>
           <?php endif; ?>
         </div>
 

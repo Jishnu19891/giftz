@@ -170,6 +170,26 @@ function formatDateTime(string $datetime): string {
     return date('M d, Y h:i A', strtotime($datetime));
 }
 
+// ─── Product Emoji Placeholder ────────────────────────────────────────────────
+function productEmoji(string $category = '', string $type = ''): string {
+    $cat = strtolower($category);
+    $map = [
+        'men\'s wear' => '👔',
+        'women\'s wear' => '👗',
+        'children'    => '🧸',
+        'seasonal'    => '🎄',
+        'souvenir'    => '🏺',
+        'accessori'   => '💍',
+        'clothing'    => '👕',
+        'cloth'       => '👕',
+    ];
+    foreach ($map as $keyword => $emoji) {
+        if (str_contains($cat, $keyword)) return $emoji;
+    }
+    if ($type === 'cloth') return '👕';
+    return '🎁';
+}
+
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 function statusBadge(string $status): string {
     $map = [
