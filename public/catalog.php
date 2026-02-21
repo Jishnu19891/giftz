@@ -539,6 +539,80 @@ foreach ($categories as $c) {
       gap: .5rem;
     }
 
+    /* ─── Announcement bar ───────────────────────────────── */
+    .announce-bar {
+      background: linear-gradient(90deg, #4F3EBF, var(--accent), var(--secondary), #C2185B);
+      background-size: 300% 100%;
+      animation: gradientShift 8s ease infinite;
+      color: #fff;
+      padding: .6rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .82rem;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
+      transition: max-height .4s ease, padding .35s ease, opacity .3s;
+      max-height: 48px;
+    }
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .announce-bar.hidden {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .announce-msg {
+      display: none;
+      align-items: center;
+      gap: .5rem;
+      animation: fadeMsg .4s ease;
+    }
+    .announce-msg.active { display: flex; }
+    @keyframes fadeMsg {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .announce-dots {
+      display: flex;
+      gap: .3rem;
+      margin-left: .75rem;
+    }
+    .announce-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.4);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: background .2s, transform .2s;
+    }
+    .announce-dot.active { background: #fff; transform: scale(1.3); }
+    .announce-dismiss {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,.18);
+      border: none;
+      color: #fff;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      font-size: .9rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background .2s;
+      line-height: 1;
+    }
+    .announce-dismiss:hover { background: rgba(255,255,255,.35); }
+
     /* ─── Responsive ─────────────────────────────────────── */
     @media (max-width: 900px) {
       .footer-inner { grid-template-columns: 1fr 1fr; }
@@ -561,6 +635,21 @@ foreach ($categories as $c) {
   </style>
 </head>
 <body>
+
+<!-- ─── Announcement bar ─────────────────────────────── -->
+<div class="announce-bar" id="announceBar">
+  <div class="announce-msg active">🎉 <span>New arrivals just landed — explore our latest gifts &amp; fashion!</span></div>
+  <div class="announce-msg">🚚 <span>Visit us in-store for exclusive member deals and special offers.</span></div>
+  <div class="announce-msg">🎄 <span>Seasonal gifts now available — perfect for every occasion.</span></div>
+  <div class="announce-msg">💝 <span>Find the perfect gift for someone special — browse our full collection.</span></div>
+  <div class="announce-dots" id="announceDots">
+    <button class="announce-dot active"></button>
+    <button class="announce-dot"></button>
+    <button class="announce-dot"></button>
+    <button class="announce-dot"></button>
+  </div>
+  <button class="announce-dismiss" id="announceDismiss" title="Dismiss">×</button>
+</div>
 
 <!-- ─── Navbar ────────────────────────────────────────── -->
 <header class="navbar">
@@ -726,5 +815,38 @@ foreach ($categories as $c) {
   </div>
 </footer>
 
+<script>
+(function () {
+  const bar   = document.getElementById('announceBar');
+  const btn   = document.getElementById('announceDismiss');
+  const msgs  = bar.querySelectorAll('.announce-msg');
+  const dots  = bar.querySelectorAll('.announce-dot');
+
+  if (localStorage.getItem('giftz_announce_v1')) {
+    bar.classList.add('hidden');
+    return;
+  }
+
+  let current = 0;
+
+  function goTo(n) {
+    msgs[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = n;
+    msgs[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  dots.forEach((d, i) => d.addEventListener('click', () => { goTo(i); resetTimer(); }));
+
+  btn.addEventListener('click', () => {
+    bar.classList.add('hidden');
+    localStorage.setItem('giftz_announce_v1', '1');
+  });
+
+  let timer = setInterval(() => goTo((current + 1) % msgs.length), 4500);
+  function resetTimer() { clearInterval(timer); timer = setInterval(() => goTo((current + 1) % msgs.length), 4500); }
+})();
+</script>
 </body>
 </html>
