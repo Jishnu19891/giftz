@@ -1057,6 +1057,71 @@ foreach ($categories as $c) {
 })();
 </script>
 
+<!-- ─── Page loading spinner ────────────────────────── -->
+<div id="pageLoader">
+  <div class="loader-box">
+    <div class="loader-ring"></div>
+    <div class="loader-brand">🎁</div>
+  </div>
+</div>
+
+<style>
+  #pageLoader {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 17, 32, .75);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  #pageLoader.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .loader-box {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+  }
+  .loader-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.1);
+    border-top-color: var(--accent);
+    border-right-color: var(--secondary);
+    animation: spin .8s linear infinite;
+  }
+  .loader-brand {
+    font-size: 1.6rem;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes spin  { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+</style>
+
+<script>
+(function () {
+  const loader = document.getElementById('pageLoader');
+
+  // Show on product card or pagination clicks
+  document.querySelectorAll('.product-card, .page-btn').forEach(el => {
+    el.addEventListener('click', () => loader.classList.add('active'));
+  });
+
+  // Hide if user navigates back (bfcache restore)
+  window.addEventListener('pageshow', e => {
+    if (e.persisted) loader.classList.remove('active');
+  });
+})();
+</script>
+
 <!-- ─── Back to top ──────────────────────────────────── -->
 <button id="backToTop" title="Back to top" aria-label="Back to top">↑</button>
 
