@@ -45,15 +45,15 @@ $min = (int)$product['min_stock_level'];
 if ($qty <= 0) {
     $stockLabel = 'Out of Stock';
     $stockBadge = 'stock-out';
-    $stockIcon  = '✕';
+    $stockDot   = 'dot-out';
 } elseif ($qty <= $min) {
-    $stockLabel = "Only {$qty} unit" . ($qty != 1 ? 's' : '') . ' left — Low Stock';
+    $stockLabel = "Only {$qty} unit" . ($qty != 1 ? 's' : '') . ' left';
     $stockBadge = 'stock-low';
-    $stockIcon  = '⚠';
+    $stockDot   = 'dot-low';
 } else {
-    $stockLabel = "{$qty} unit" . ($qty != 1 ? 's' : '') . ' in stock';
+    $stockLabel = 'In Stock';
     $stockBadge = 'stock-ok';
-    $stockIcon  = '●';
+    $stockDot   = 'dot-ok';
 }
 
 $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
@@ -71,289 +71,376 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
   <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 
   <style>
+    /* ═══════════════════════════════════════════════════════
+       Giftz Product Page — Professional Design
+    ═══════════════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font); background: #F4F6FB; color: var(--text-primary); }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: #F7F8FC; color: #111827; }
 
     /* ─── Navbar ─────────────────────────────────────────── */
     .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 200;
-      background: var(--sidebar-bg);
-      height: 62px;
-      display: flex;
-      align-items: center;
-      padding: 0 2rem;
-      gap: 1.5rem;
-      box-shadow: 0 2px 20px rgba(0,0,0,.4);
+      position: sticky; top: 0; z-index: 200;
+      background: #0F172A; height: 64px;
+      display: flex; align-items: center;
+      padding: 0 2rem; gap: 2rem;
+      box-shadow: 0 1px 0 rgba(255,255,255,.05), 0 4px 20px rgba(0,0,0,.35);
     }
     .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: .65rem;
-      color: #fff;
-      font-weight: 800;
-      font-size: 1.1rem;
-      text-decoration: none;
-      flex-shrink: 0;
+      display: flex; align-items: center; gap: .6rem;
+      color: #fff; font-weight: 700; font-size: 1.05rem;
+      text-decoration: none; flex-shrink: 0; letter-spacing: -.02em;
     }
     .nav-brand-icon {
-      width: 34px; height: 34px;
-      background: linear-gradient(135deg, var(--accent), var(--secondary));
-      border-radius: 9px;
-      display: grid;
-      place-items: center;
-      font-size: 1rem;
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #818CF8, #6366F1);
+      border-radius: 8px; display: grid; place-items: center;
+      font-size: .95rem; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(99,102,241,.45);
     }
     .nav-back {
       margin-left: auto;
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      color: rgba(255,255,255,.65);
-      font-size: .83rem;
-      font-weight: 500;
-      text-decoration: none;
-      padding: .4rem .85rem;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,.15);
-      transition: background .2s, color .2s;
-      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: rgba(255,255,255,.55); font-size: .82rem; font-weight: 500;
+      text-decoration: none; padding: .42rem .9rem;
+      border-radius: 8px; border: 1px solid rgba(255,255,255,.12);
+      transition: background .2s, color .2s; flex-shrink: 0;
+      white-space: nowrap;
     }
-    .nav-back:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-back:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+    /* ─── Trust bar ──────────────────────────────────────── */
+    .trust-bar {
+      background: #fff; border-bottom: 1px solid #E5E7EB; padding: .5rem 2rem;
+    }
+    .trust-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      gap: 2rem; flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .74rem; font-weight: 500; color: #374151; white-space: nowrap;
+    }
+    .trust-divider { width: 1px; height: 13px; background: #E5E7EB; }
 
     /* ─── Page wrapper ───────────────────────────────────── */
     .page-wrap {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 2rem 2rem 4rem;
+      max-width: 1100px; margin: 0 auto;
+      padding: 2rem 2rem 5rem;
     }
 
-    /* ─── Breadcrumb ──────────────────────────────────────── */
+    /* ─── Breadcrumb ─────────────────────────────────────── */
     .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-      font-size: .82rem;
-      color: var(--text-muted);
-      margin-bottom: 1.75rem;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: .35rem;
+      font-size: .78rem; color: #9CA3AF;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
     }
-    .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
-    .breadcrumb a:hover { color: var(--accent); }
-    .breadcrumb .sep { color: #D1D5DB; }
-    .breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+    .breadcrumb a { color: #9CA3AF; text-decoration: none; transition: color .2s; }
+    .breadcrumb a:hover { color: #4F46E5; }
+    .breadcrumb .sep { color: #D1D5DB; font-size: .7rem; }
+    .breadcrumb .current { color: #374151; font-weight: 500; }
 
-    /* ─── Product detail card ────────────────────────────── */
-    .product-card {
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 2px 20px rgba(0,0,0,.07);
-      border: 1px solid var(--border);
+    /* ─── Product layout ─────────────────────────────────── */
+    .product-layout {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: #fff; border-radius: 16px;
+      border: 1px solid #EAECF0;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.04);
       overflow: hidden;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
     }
 
-    /* Image panel — square, uniform */
+    /* ─── Image panel ────────────────────────────────────── */
     .img-panel {
-      position: relative;
-      width: 100%;
-      padding-top: 100%;   /* enforce 1:1 square */
-      background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
+      position: relative; width: 100%; padding-top: 100%;
+      background: linear-gradient(145deg, #EEF2FF, #E0E7FF);
       overflow: hidden;
     }
     .img-panel img {
-      position: absolute;
-      top: 0; left: 0;
+      position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
+      object-fit: cover; display: block;
     }
     .img-placeholder {
-      position: absolute;
-      top: 0; left: 0;
+      position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
-      display: grid;
-      place-items: center;
-      font-size: 7rem;
-      opacity: .6;
-      user-select: none;
+      display: grid; place-items: center;
+      font-size: 7rem; opacity: .55; user-select: none;
+    }
+    /* Subtle "zoom" hint badge */
+    .img-hint {
+      position: absolute; bottom: .75rem; right: .75rem;
+      background: rgba(255,255,255,.85); backdrop-filter: blur(6px);
+      border: 1px solid #E5E7EB; border-radius: 8px;
+      padding: .3rem .65rem; font-size: .7rem; font-weight: 600;
+      color: #374151; display: flex; align-items: center; gap: .3rem;
     }
 
-    /* Info panel */
+    /* ─── Info panel ─────────────────────────────────────── */
     .info-panel {
-      padding: 2.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.1rem;
+      padding: 2.5rem 2.5rem 2rem;
+      display: flex; flex-direction: column;
+      border-left: 1px solid #F1F2F4;
     }
+
     .info-cat {
-      font-size: .72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--accent);
+      font-size: .67rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: #4F46E5; margin-bottom: .5rem;
     }
     .info-name {
-      font-size: 1.85rem;
-      font-weight: 800;
-      line-height: 1.2;
-      letter-spacing: -.02em;
+      font-size: 1.75rem; font-weight: 800;
+      line-height: 1.15; letter-spacing: -.025em;
+      color: #111827; margin-bottom: 1rem;
+    }
+
+    /* Price block */
+    .price-block {
+      padding: 1.1rem 0; border-top: 1px solid #F1F2F4; border-bottom: 1px solid #F1F2F4;
+      margin-bottom: 1.1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     }
     .info-price {
-      font-size: 2.25rem;
-      font-weight: 800;
-      color: var(--accent);
-      letter-spacing: -.03em;
+      font-size: 2.1rem; font-weight: 800;
+      color: #111827; letter-spacing: -.03em; line-height: 1;
     }
-    .info-stock {
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      font-size: .82rem;
-      font-weight: 600;
-      padding: .4em .9em;
-      border-radius: 100px;
-    }
-    .stock-ok  { background: rgba(16,185,129,.1);  color: var(--success); }
-    .stock-low { background: rgba(245,158,11,.1);  color: var(--warning); }
-    .stock-out { background: rgba(239,68,68,.1);   color: var(--danger);  }
+    .info-price-label { font-size: .72rem; color: #9CA3AF; font-weight: 500; margin-top: .2rem; }
 
-    /* Meta table */
+    /* Stock badge */
+    .stock-badge {
+      display: inline-flex; align-items: center; gap: .45rem;
+      font-size: .8rem; font-weight: 600;
+      padding: .4em .85em; border-radius: 8px;
+    }
+    .stock-badge .sdot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .stock-ok  { background: #ECFDF5; color: #059669; }
+    .stock-low { background: #FFFBEB; color: #D97706; }
+    .stock-out { background: #FEF2F2; color: #DC2626; }
+    .dot-ok  { background: #10B981; animation: pulse-dot 2s ease-in-out infinite; }
+    .dot-low { background: #F59E0B; }
+    .dot-out { background: #EF4444; }
+    @keyframes pulse-dot {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
+      50%      { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+    }
+
+    /* Delivery estimate */
+    .delivery-line {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .8rem; color: #6B7280; margin-bottom: 1.1rem;
+    }
+    .delivery-line strong { color: #374151; }
+
+    /* Meta specs */
     .info-meta {
-      background: #F9FAFB;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-    .meta-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: .7rem 1.1rem;
-      font-size: .86rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .meta-row:last-child { border-bottom: none; }
-    .meta-label { color: var(--text-muted); }
-    .meta-value { font-weight: 600; }
-
-    .info-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .25rem; }
-    .btn-store-back {
-      display: inline-flex;
-      align-items: center;
-      gap: .45rem;
-      padding: .7rem 1.4rem;
-      background: transparent;
-      color: var(--accent);
-      border: 1.5px solid var(--accent);
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: .88rem;
-      text-decoration: none;
-      transition: background .2s, color .2s;
-    }
-    .btn-store-back:hover { background: var(--accent); color: #fff; }
-
-    /* ─── Related products ───────────────────────────────── */
-    .related-section { margin-top: 3rem; }
-    .related-title {
-      font-size: 1.15rem;
-      font-weight: 700;
+      background: #F9FAFB; border-radius: 10px;
+      border: 1px solid #EAECF0; overflow: hidden;
       margin-bottom: 1.25rem;
     }
-    .related-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 1.25rem;
+    .meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .65rem 1rem; font-size: .84rem;
+      border-bottom: 1px solid #EAECF0;
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { color: #9CA3AF; font-weight: 500; }
+    .meta-value { font-weight: 600; color: #111827; }
+
+    /* Action buttons */
+    .info-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .btn-primary-store {
+      flex: 1; min-width: 160px;
+      display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+      padding: .8rem 1.5rem;
+      background: #4F46E5; color: #fff;
+      border: none; border-radius: 10px;
+      font-weight: 600; font-size: .9rem; font-family: inherit;
+      text-decoration: none; cursor: pointer;
+      transition: background .2s, transform .15s; letter-spacing: .01em;
+    }
+    .btn-primary-store:hover { background: #4338CA; color: #fff; transform: translateY(-1px); }
+    .btn-outline-store {
+      display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+      padding: .8rem 1.25rem;
+      background: transparent; color: #374151;
+      border: 1px solid #D1D5DB; border-radius: 10px;
+      font-weight: 500; font-size: .88rem;
+      text-decoration: none;
+      transition: border-color .2s, background .2s, color .2s;
+    }
+    .btn-outline-store:hover { border-color: #4F46E5; color: #4F46E5; background: #EEF2FF; }
+
+    /* Micro trust row */
+    .info-trust {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      padding-top: .75rem; border-top: 1px solid #F1F2F4;
+    }
+    .info-trust-item {
+      display: flex; align-items: center; gap: .3rem;
+      font-size: .72rem; color: #9CA3AF; font-weight: 500;
     }
 
-    /* Mini product card (same as catalog) */
-    .mini-card {
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-      transition: transform .2s, box-shadow .2s;
+    /* ─── Related section ────────────────────────────────── */
+    .related-section { margin-top: 3.5rem; }
+    .related-hd {
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: 1.5rem;
     }
-    .mini-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.11); color: inherit; }
+    .related-hd h2 { font-size: 1.1rem; font-weight: 700; color: #111827; }
+    .related-hd-line { flex: 1; height: 1px; background: #EAECF0; }
+
+    /* Related grid — matches catalog card style */
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+    .mini-card {
+      background: #fff; border-radius: 12px; overflow: hidden;
+      border: 1px solid #EAECF0;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+      transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+    .mini-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.09);
+      border-color: #C7D2FE; color: inherit;
+    }
     .mini-img {
-      position: relative;
-      width: 100%;
-      padding-top: 100%;
-      background: linear-gradient(135deg, #F0F0F8, #E4E4F0);
+      position: relative; width: 100%; padding-top: 100%;
+      background: linear-gradient(145deg, #EEF2FF, #E0E7FF);
       overflow: hidden;
     }
     .mini-img img,
     .mini-img > span {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     }
-    .mini-img img { object-fit: cover; display: block; }
+    .mini-img img { object-fit: cover; display: block; transition: transform .4s ease; }
+    .mini-card:hover .mini-img img { transform: scale(1.05); }
     .mini-img > span { display: grid; place-items: center; font-size: 2.5rem; }
-    .mini-body { padding: .85rem 1rem; flex: 1; display: flex; flex-direction: column; gap: .2rem; }
-    .mini-cat  { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
-    .mini-name { font-size: .88rem; font-weight: 600; line-height: 1.3; }
-    .mini-price{ font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-top: .4rem; }
+    /* Corner arrow on related card */
+    .mini-arrow {
+      position: absolute; bottom: 0; right: 0;
+      width: 32px; height: 32px;
+      background: #4F46E5; color: #fff;
+      border-radius: 10px 0 0 0;
+      display: grid; place-items: center;
+      font-size: .88rem;
+      opacity: 0; transform: translate(3px, 3px);
+      transition: opacity .22s, transform .22s;
+    }
+    .mini-card:hover .mini-arrow { opacity: 1; transform: translate(0,0); }
+    .mini-body { padding: .85rem 1rem 1rem; flex: 1; display: flex; flex-direction: column; gap: .2rem; }
+    .mini-cat  { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #4F46E5; }
+    .mini-name { font-size: .88rem; font-weight: 600; line-height: 1.35; color: #111827; }
+    .mini-price{ font-size: 1rem; font-weight: 800; color: #111827; margin-top: .4rem; letter-spacing: -.01em; }
 
     /* ─── Footer ─────────────────────────────────────────── */
     .store-footer {
-      background: var(--sidebar-bg);
-      color: rgba(255,255,255,.4);
-      text-align: center;
-      padding: 1.5rem 2rem;
-      font-size: .8rem;
+      background: #0F172A; color: rgba(255,255,255,.38);
+      padding: 2rem 2rem;
       margin-top: 2rem;
     }
-    .store-footer a { color: rgba(255,255,255,.55); text-decoration: none; }
-    .store-footer a:hover { color: #fff; }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: .55rem;
+      color: rgba(255,255,255,.7); font-weight: 700; font-size: .95rem;
+      text-decoration: none; letter-spacing: -.01em;
+    }
+    .footer-brand-icon {
+      width: 26px; height: 26px;
+      background: linear-gradient(135deg, #818CF8, #6366F1);
+      border-radius: 6px; display: grid; place-items: center; font-size: .75rem;
+    }
+    .footer-links { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    .footer-links a {
+      font-size: .78rem; color: rgba(255,255,255,.35);
+      text-decoration: none; transition: color .2s;
+    }
+    .footer-links a:hover { color: rgba(255,255,255,.75); }
+    .footer-copy { font-size: .75rem; }
+
+    /* ─── Loader ─────────────────────────────────────────── */
+    #pageLoader {
+      position: fixed; inset: 0;
+      background: rgba(15,17,32,.72); backdrop-filter: blur(6px);
+      z-index: 9999; display: grid; place-items: center;
+      opacity: 0; pointer-events: none; transition: opacity .25s ease;
+    }
+    #pageLoader.active { opacity: 1; pointer-events: all; }
+    .loader-box { position: relative; width: 64px; height: 64px; display: grid; place-items: center; }
+    .loader-ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,.07);
+      border-top-color: #6366F1; border-right-color: #EC4899;
+      animation: spin .75s linear infinite;
+    }
+    .loader-brand { font-size: 1.5rem; animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+
+    /* ─── Back to top ────────────────────────────────────── */
+    #backToTop {
+      position: fixed; bottom: 2rem; right: 2rem;
+      width: 40px; height: 40px; border-radius: 10px;
+      background: #1E293B; color: rgba(255,255,255,.8);
+      border: 1px solid rgba(255,255,255,.1);
+      font-size: .95rem; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0,0,0,.3);
+      display: grid; place-items: center;
+      opacity: 0; transform: translateY(10px);
+      transition: opacity .3s, transform .3s, background .2s;
+      z-index: 500; pointer-events: none;
+    }
+    #backToTop.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    #backToTop:hover { background: #334155; color: #fff; }
 
     /* ─── Responsive ─────────────────────────────────────── */
-
-    /* Tablet: stack image above info */
     @media (max-width: 800px) {
-      .product-card { grid-template-columns: 1fr; }
-      .img-panel { padding-top: 80%; }
-      .info-panel { padding: 1.75rem; }
-      .info-name  { font-size: 1.5rem; }
+      .product-layout { grid-template-columns: 1fr; }
+      .img-panel { padding-top: 75%; }
+      .info-panel { border-left: none; border-top: 1px solid #F1F2F4; padding: 1.75rem; }
+      .info-name  { font-size: 1.45rem; }
       .info-price { font-size: 1.75rem; }
     }
-
-    /* Phone */
+    @media (max-width: 768px) {
+      .trust-inner { gap: 1.25rem; }
+      .trust-divider { display: none; }
+    }
     @media (max-width: 640px) {
-      .navbar    { padding: 0 .85rem; height: 56px; gap: 1rem; }
-      .nav-back  { font-size: .78rem; padding: .35rem .7rem; }
+      .navbar { padding: 0 .85rem; height: 56px; gap: 1rem; }
+      .nav-back { font-size: .76rem; padding: .35rem .7rem; }
+      .trust-bar { padding: .45rem 1rem; }
+      .trust-item:nth-child(n+4) { display: none; }
       .page-wrap { padding: 1.25rem .9rem 3rem; }
-      .img-panel { padding-top: 75%; }
-      .info-panel { padding: 1.25rem; gap: .85rem; }
-      .info-name  { font-size: 1.3rem; }
-      .info-price { font-size: 1.5rem; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
-      .related-section { margin-top: 2rem; }
-      #backToTop { bottom: 1.25rem; right: 1.25rem; width: 40px; height: 40px; font-size: 1rem; }
-    }
-
-    /* Small phone */
-    @media (max-width: 480px) {
       .img-panel { padding-top: 70%; }
-      .info-panel { padding: 1rem; gap: .75rem; }
-      .info-name  { font-size: 1.15rem; }
-      .info-price { font-size: 1.3rem; }
-      .info-actions { flex-direction: column; }
-      .btn-store-back { justify-content: center; text-align: center; }
-      .meta-row { padding: .6rem .9rem; font-size: .82rem; }
+      .info-panel { padding: 1.25rem; }
+      .info-name  { font-size: 1.25rem; }
+      .info-price { font-size: 1.55rem; }
+      .related-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+      .related-section { margin-top: 2.5rem; }
+      #backToTop { bottom: 1.25rem; right: 1.25rem; width: 36px; height: 36px; }
     }
-
-    /* Very small phone */
+    @media (max-width: 480px) {
+      .navbar { height: 54px; }
+      .info-panel { padding: 1rem .9rem; }
+      .info-name  { font-size: 1.1rem; }
+      .info-price { font-size: 1.35rem; }
+      .info-actions { flex-direction: column; }
+      .btn-primary-store, .btn-outline-store { min-width: unset; width: 100%; }
+      .meta-row { padding: .55rem .85rem; font-size: .82rem; }
+      .trust-item:nth-child(n+3) { display: none; }
+    }
     @media (max-width: 360px) {
       .navbar { padding: 0 .65rem; gap: .5rem; }
-      .nav-back { font-size: .72rem; padding: .3rem .55rem; }
+      .nav-back { font-size: .7rem; padding: .3rem .55rem; }
       .related-grid { grid-template-columns: 1fr; }
       .img-panel { padding-top: 65%; }
     }
@@ -370,12 +457,25 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
   <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="nav-back">← Back to Catalog</a>
 </header>
 
-<!-- ─── Main ─────────────────────────────────────────── -->
+<!-- ─── Trust bar ────────────────────────────────────── -->
+<div class="trust-bar">
+  <div class="trust-inner">
+    <div class="trust-item"><span>🚚</span> Free delivery above ₹499</div>
+    <div class="trust-divider"></div>
+    <div class="trust-item"><span>↩</span> Easy 7-day returns</div>
+    <div class="trust-divider"></div>
+    <div class="trust-item"><span>✓</span> 100% authentic</div>
+    <div class="trust-divider"></div>
+    <div class="trust-item"><span>🔒</span> Secure checkout</div>
+  </div>
+</div>
+
+<!-- ─── Main content ──────────────────────────────────── -->
 <main class="page-wrap">
 
   <!-- Breadcrumb -->
   <nav class="breadcrumb">
-    <a href="<?= BASE_URL ?>/public/catalog.php">All Products</a>
+    <a href="<?= BASE_URL ?>/public/catalog.php">Store</a>
     <?php if ($product['category_name']): ?>
     <span class="sep">›</span>
     <a href="<?= BASE_URL ?>/public/catalog.php?cat=<?= $product['category_id'] ?>"><?= e($product['category_name']) ?></a>
@@ -385,33 +485,45 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
   </nav>
 
   <!-- Product detail -->
-  <div class="product-card">
+  <div class="product-layout">
 
-    <!-- Image -->
+    <!-- Image panel -->
     <div class="img-panel">
       <?php if ($product['image'] && file_exists(UPLOAD_PATH . '/' . $product['image'])): ?>
         <img src="<?= UPLOAD_URL ?>/<?= e($product['image']) ?>" alt="<?= e($product['name']) ?>">
+        <div class="img-hint">🔍 Product image</div>
       <?php else: ?>
         <div class="img-placeholder"><?= productEmoji($product['category_name'] ?? '', $product['type']) ?></div>
       <?php endif; ?>
     </div>
 
-    <!-- Info -->
+    <!-- Info panel -->
     <div class="info-panel">
+
       <?php if ($product['category_name']): ?>
       <div class="info-cat"><?= e($product['category_name']) ?></div>
       <?php endif; ?>
 
       <h1 class="info-name"><?= e($product['name']) ?></h1>
 
-      <div class="info-price"><?= formatCurrency((float)$product['selling_price']) ?></div>
-
-      <div>
-        <span class="info-stock <?= $stockBadge ?>">
-          <?= $stockIcon ?> <?= e($stockLabel) ?>
+      <!-- Price + stock -->
+      <div class="price-block">
+        <div>
+          <div class="info-price"><?= formatCurrency((float)$product['selling_price']) ?></div>
+          <div class="info-price-label">Inclusive of all taxes</div>
+        </div>
+        <span class="stock-badge <?= $stockBadge ?>">
+          <span class="sdot <?= $stockDot ?>"></span>
+          <?= e($stockLabel) ?>
         </span>
       </div>
 
+      <!-- Delivery estimate -->
+      <div class="delivery-line">
+        🚚 <span>Estimated delivery: <strong>2 – 5 business days</strong></span>
+      </div>
+
+      <!-- Spec table -->
       <div class="info-meta">
         <div class="meta-row">
           <span class="meta-label">SKU</span>
@@ -441,16 +553,32 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
         <?php endif; ?>
       </div>
 
+      <!-- Actions -->
       <div class="info-actions">
-        <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="btn-store-back">← Browse More</a>
+        <a href="<?= BASE_URL ?>/public/catalog.php<?= e($backCat) ?>" class="btn-primary-store">
+          Browse <?= $product['category_name'] ? e($product['category_name']) : 'More Products' ?>
+        </a>
+        <a href="<?= BASE_URL ?>/public/catalog.php" class="btn-outline-store">All Products</a>
       </div>
+
+      <!-- Micro trust -->
+      <div class="info-trust">
+        <div class="info-trust-item">✓ Authentic</div>
+        <div class="info-trust-item">↩ Easy returns</div>
+        <div class="info-trust-item">🔒 Secure</div>
+        <div class="info-trust-item">🎁 Gift ready</div>
+      </div>
+
     </div>
   </div>
 
   <!-- Related products -->
   <?php if (!empty($related)): ?>
   <div class="related-section">
-    <div class="related-title">More from <?= e($product['category_name'] ?? 'our store') ?></div>
+    <div class="related-hd">
+      <h2>More from <?= e($product['category_name'] ?? 'our store') ?></h2>
+      <div class="related-hd-line"></div>
+    </div>
     <div class="related-grid">
       <?php foreach ($related as $r): ?>
       <a href="<?= BASE_URL ?>/public/product.php?id=<?= $r['id'] ?>" class="mini-card">
@@ -460,6 +588,7 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
           <?php else: ?>
             <span><?= productEmoji($r['category_name'] ?? '', $r['type']) ?></span>
           <?php endif; ?>
+          <div class="mini-arrow">→</div>
         </div>
         <div class="mini-body">
           <?php if ($r['category_name']): ?><div class="mini-cat"><?= e($r['category_name']) ?></div><?php endif; ?>
@@ -476,11 +605,23 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
 
 <!-- ─── Footer ────────────────────────────────────────── -->
 <footer class="store-footer">
-  &copy; <?= date('Y') ?> <?= e(APP_NAME) ?> &mdash; All prices in <?= CURRENCY_CODE ?>
-  &nbsp;·&nbsp; <a href="<?= BASE_URL ?>/public/catalog.php">Back to Store</a>
+  <div class="footer-inner">
+    <a href="<?= BASE_URL ?>/public/catalog.php" class="footer-brand">
+      <div class="footer-brand-icon">🎁</div>
+      <?= APP_NAME ?>
+    </a>
+    <div class="footer-links">
+      <a href="<?= BASE_URL ?>/public/catalog.php">All Products</a>
+      <?php if ($product['category_name']): ?>
+      <a href="<?= BASE_URL ?>/public/catalog.php?cat=<?= $product['category_id'] ?>"><?= e($product['category_name']) ?></a>
+      <?php endif; ?>
+      <a href="<?= BASE_URL ?>/login.php">Staff Login</a>
+    </div>
+    <div class="footer-copy">&copy; <?= date('Y') ?> <?= e(APP_NAME) ?> &mdash; All prices in <?= CURRENCY_CODE ?></div>
+  </div>
 </footer>
 
-<!-- ─── Page loading spinner ────────────────────────── -->
+<!-- ─── Page loader ───────────────────────────────────── -->
 <div id="pageLoader">
   <div class="loader-box">
     <div class="loader-ring"></div>
@@ -488,57 +629,12 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
   </div>
 </div>
 
-<style>
-  #pageLoader {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 17, 32, .75);
-    backdrop-filter: blur(6px);
-    z-index: 9999;
-    display: grid;
-    place-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease;
-  }
-  #pageLoader.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .loader-box {
-    position: relative;
-    width: 72px;
-    height: 72px;
-    display: grid;
-    place-items: center;
-  }
-  .loader-ring {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,.1);
-    border-top-color: var(--accent);
-    border-right-color: var(--secondary);
-    animation: spin .8s linear infinite;
-  }
-  .loader-brand {
-    font-size: 1.6rem;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  @keyframes spin  { to { transform: rotate(360deg); } }
-  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-</style>
-
 <script>
 (function () {
   const loader = document.getElementById('pageLoader');
-
-  // Show on related product cards and nav links
-  document.querySelectorAll('.mini-card, .btn-store-back, .breadcrumb a').forEach(el => {
+  document.querySelectorAll('.mini-card, .btn-primary-store, .btn-outline-store, .breadcrumb a, .nav-back').forEach(el => {
     el.addEventListener('click', () => loader.classList.add('active'));
   });
-
-  // Hide if user navigates back (bfcache restore)
   window.addEventListener('pageshow', e => {
     if (e.persisted) loader.classList.remove('active');
   });
@@ -547,40 +643,6 @@ $backCat = $product['category_id'] ? '?cat=' . $product['category_id'] : '';
 
 <!-- ─── Back to top ──────────────────────────────────── -->
 <button id="backToTop" title="Back to top" aria-label="Back to top">↑</button>
-
-<style>
-  #backToTop {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #7C3AED);
-    color: #fff;
-    border: none;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 18px rgba(108,99,255,.45);
-    display: grid;
-    place-items: center;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity .3s, transform .3s;
-    z-index: 500;
-    pointer-events: none;
-  }
-  #backToTop.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-  #backToTop:hover {
-    box-shadow: 0 6px 24px rgba(108,99,255,.65);
-    transform: translateY(-2px);
-  }
-</style>
 
 <script>
 (function () {
