@@ -83,6 +83,7 @@ require __DIR__ . '/includes/header.php';
         <span class="title-icon">⊞</span> Dashboard
     </h1>
     <div class="page-actions">
+        <a href="<?= BASE_URL ?>/public/catalog.php" class="btn btn-secondary" target="_blank">🛍 Public Catalog</a>
         <a href="<?= BASE_URL ?>/sales/pos.php"     class="btn btn-primary">🛒 New Sale</a>
         <a href="<?= BASE_URL ?>/purchases/add.php" class="btn btn-secondary">📋 New Purchase</a>
     </div>
