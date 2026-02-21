@@ -1,0 +1,12 @@
+# Claude Code session data
+.claude/
+
+# XAMPP / PHP runtime
+*.log
+*.cache
+/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
