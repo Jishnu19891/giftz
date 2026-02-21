@@ -502,7 +502,7 @@ foreach ($categories as $c) {
       max-width: 1280px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr;
+      grid-template-columns: 1.6fr 1fr 1fr 1.3fr;
       gap: 2.5rem;
       padding-bottom: 2rem;
       border-bottom: 1px solid rgba(255,255,255,.08);
@@ -527,6 +527,17 @@ foreach ($categories as $c) {
       transition: color .2s;
     }
     .footer-col a:hover { color: #fff; }
+    .footer-contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
+      font-size: .83rem;
+      color: rgba(255,255,255,.5);
+      margin-bottom: .75rem;
+      line-height: 1.55;
+    }
+    .footer-contact-item a { color: rgba(255,255,255,.5); text-decoration: none; transition: color .2s; }
+    .footer-contact-item a:hover { color: #fff; }
     .footer-bottom {
       max-width: 1280px;
       margin: 1.5rem auto 0;
@@ -614,7 +625,7 @@ foreach ($categories as $c) {
     .announce-dismiss:hover { background: rgba(255,255,255,.35); }
 
     /* ─── Responsive ─────────────────────────────────────── */
-    @media (max-width: 900px) {
+    @media (max-width: 1024px) {
       .footer-inner { grid-template-columns: 1fr 1fr; }
       .footer-inner > :first-child { grid-column: 1 / -1; }
     }
@@ -806,6 +817,14 @@ foreach ($categories as $c) {
       <a href="<?= BASE_URL ?>/public/catalog.php">New Arrivals</a>
       <a href="<?= BASE_URL ?>/public/catalog.php?cat=5">Seasonal Gifts</a>
       <a href="<?= BASE_URL ?>/login.php">Staff Login</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Contact &amp; Location</h4>
+      <div class="footer-contact-item">📍 <span>123 Gift Street, Connaught Place<br>New Delhi, India 110001</span></div>
+      <div class="footer-contact-item">📞 <span><a href="tel:+911234567890">+91 12345 67890</a></span></div>
+      <div class="footer-contact-item">✉️ <span><a href="mailto:hello@giftz.in">hello@giftz.in</a></span></div>
+      <div class="footer-contact-item">🕐 <span>Mon – Sat: 10 AM – 8 PM<br>Sun: 11 AM – 6 PM</span></div>
     </div>
   </div>
 
