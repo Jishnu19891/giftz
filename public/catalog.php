@@ -1056,5 +1056,52 @@ foreach ($categories as $c) {
   function resetTimer() { clearInterval(timer); timer = setInterval(() => goTo((current + 1) % msgs.length), 4500); }
 })();
 </script>
+
+<!-- ─── Back to top ──────────────────────────────────── -->
+<button id="backToTop" title="Back to top" aria-label="Back to top">↑</button>
+
+<style>
+  #backToTop {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #7C3AED);
+    color: #fff;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(108,99,255,.45);
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .3s, transform .3s;
+    z-index: 500;
+    pointer-events: none;
+  }
+  #backToTop.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  #backToTop:hover {
+    box-shadow: 0 6px 24px rgba(108,99,255,.65);
+    transform: translateY(-2px);
+  }
+</style>
+
+<script>
+(function () {
+  const btn = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+</script>
 </body>
 </html>
