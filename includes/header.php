@@ -147,6 +147,12 @@ $bodyClass     = $bodyClass     ?? '';
     </a>
     <?php endif; ?>
 
+    <div class="nav-section-label">Storefront</div>
+    <a href="<?= BASE_URL ?>/public/catalog.php" class="nav-item" target="_blank">
+      <span class="nav-icon">🛍</span>
+      <span class="nav-label">Public Catalog</span>
+    </a>
+
   </nav>
 
   <!-- Footer -->
