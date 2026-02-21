@@ -748,26 +748,91 @@ foreach ($categories as $c) {
     .announce-dismiss:hover { background: rgba(255,255,255,.35); }
 
     /* ─── Responsive ─────────────────────────────────────── */
+
+    /* Tablet */
     @media (max-width: 1024px) {
       .footer-inner { grid-template-columns: 1fr 1fr; }
       .footer-inner > :first-child { grid-column: 1 / -1; }
     }
+
+    /* Large phone / small tablet */
+    @media (max-width: 768px) {
+      .hero-layout { padding: 3.5rem 1.5rem 0; }
+      .showcase-card:nth-child(2) { margin-top: 1.25rem; }
+      .showcase-card:nth-child(4) { margin-top: -1.25rem; }
+    }
+
+    /* Phone */
     @media (max-width: 640px) {
-      .navbar { padding: 0 1rem; }
+      /* Navbar */
+      .navbar { padding: 0 .85rem; gap: .75rem; height: 56px; }
       .nav-tagline { display: none; }
-      .hero-layout { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1rem 0; }
+      .nav-brand-icon { width: 30px; height: 30px; }
+
+      /* Announcement bar */
+      .announce-bar { padding: .5rem 2.4rem .5rem 1rem; font-size: .78rem; }
+      .announce-msg { gap: .35rem; }
+      .announce-dismiss { right: .55rem; }
+      .announce-dots { margin-left: .5rem; }
+
+      /* Hero */
+      .hero-layout { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.5rem 1rem 0; }
       .hero-showcase { display: none; }
-      .hero h1 { font-size: 2rem; }
+      .hero h1 { font-size: 1.9rem; }
+      .hero-sub { font-size: .9rem; max-width: 100%; }
+      .hero-badge { font-size: .7rem; padding: .28rem .8rem; }
+      .hero-search { max-width: 100%; }
+      .hero-search input { padding: .75rem 1rem; font-size: .85rem; }
+      .hero-search button { padding: 0 1rem; font-size: .82rem; }
       .hero-stats { gap: 1rem; }
       .hero-stat + .hero-stat { padding-left: 1rem; }
-      .cat-bar { padding: 0 1rem; }
-      .store-wrap { padding: 1.5rem 1rem 3rem; }
-      .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+      .hero-stat strong { font-size: 1.2rem; }
+
+      /* Category bar — sticky offset matches new navbar height */
+      .cat-bar-wrap { top: 56px; }
+      .cat-bar { padding: 0 .75rem; }
+      .cat-btn { padding: .7rem .85rem; font-size: .78rem; }
+
+      /* Store content */
+      .store-wrap { padding: 1.25rem .9rem 3rem; }
+      .section-hd { margin-bottom: 1rem; gap: .5rem; }
+      .section-hd h2 { font-size: 1.1rem; }
+
+      /* Product grid */
+      .product-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-bottom: 1.75rem; }
+      .card-body { padding: .7rem .85rem .85rem; }
+      .card-name { font-size: .88rem; }
+      .card-price { font-size: 1rem; }
+      .card-stock { font-size: .67rem; padding: .18em .55em; }
+
+      /* Pagination */
+      .pg-row { flex-direction: column; align-items: flex-start; gap: .75rem; }
+
+      /* Footer */
       .footer-inner { grid-template-columns: 1fr; gap: 1.5rem; }
       .store-footer { padding: 2rem 1rem 1.5rem; }
+      .footer-bottom { flex-direction: column; gap: .35rem; }
+
+      /* Back to top */
+      #backToTop { bottom: 1.25rem; right: 1.25rem; width: 40px; height: 40px; font-size: 1rem; }
     }
+
+    /* Small phone */
+    @media (max-width: 480px) {
+      .navbar { height: 54px; }
+      .cat-bar-wrap { top: 54px; }
+      .hero h1 { font-size: 1.65rem; }
+      .hero-stats { flex-wrap: wrap; column-gap: .75rem; row-gap: .4rem; }
+      .hero-stat + .hero-stat { border-left: none; padding-left: 0; }
+      .section-hd h2 { font-size: 1rem; }
+    }
+
+    /* Very small phone */
     @media (max-width: 360px) {
+      .navbar { padding: 0 .65rem; gap: .5rem; }
+      .nav-brand-icon { width: 26px; height: 26px; font-size: .8rem; }
       .product-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 1.5rem; }
     }
   </style>
 </head>
@@ -1025,10 +1090,10 @@ foreach ($categories as $c) {
 
 <script>
 (function () {
-  const bar   = document.getElementById('announceBar');
-  const btn   = document.getElementById('announceDismiss');
-  const msgs  = bar.querySelectorAll('.announce-msg');
-  const dots  = bar.querySelectorAll('.announce-dot');
+  const bar  = document.getElementById('announceBar');
+  const btn  = document.getElementById('announceDismiss');
+  const msgs = bar.querySelectorAll('.announce-msg');
+  const dots = bar.querySelectorAll('.announce-dot');
 
   if (localStorage.getItem('giftz_announce_v1')) {
     bar.classList.add('hidden');
@@ -1039,10 +1104,10 @@ foreach ($categories as $c) {
 
   function goTo(n) {
     msgs[current].classList.remove('active');
-    dots[current].classList.remove('active');
+    if (dots[current]) dots[current].classList.remove('active');
     current = n;
     msgs[current].classList.add('active');
-    dots[current].classList.add('active');
+    if (dots[current]) dots[current].classList.add('active');
   }
 
   dots.forEach((d, i) => d.addEventListener('click', () => { goTo(i); resetTimer(); }));
@@ -1052,8 +1117,12 @@ foreach ($categories as $c) {
     localStorage.setItem('giftz_announce_v1', '1');
   });
 
-  let timer = setInterval(() => goTo((current + 1) % msgs.length), 4500);
-  function resetTimer() { clearInterval(timer); timer = setInterval(() => goTo((current + 1) % msgs.length), 4500); }
+  let timer;
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => goTo((current + 1) % msgs.length), 4500);
+  }
+  if (msgs.length > 1) resetTimer();
 })();
 </script>
 
