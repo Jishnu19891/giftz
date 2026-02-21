@@ -53,6 +53,11 @@ $catEmojis = [
 
 $baseLink = BASE_URL . '/public/catalog.php?q=' . urlencode($search) . '&cat=' . $catId;
 
+// Storefront announcements from DB
+$announcements = $pdo->query(
+    "SELECT emoji, message FROM announcements WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
+)->fetchAll();
+
 // Active category name
 $activeCatName = 'All Products';
 foreach ($categories as $c) {
@@ -648,19 +653,23 @@ foreach ($categories as $c) {
 <body>
 
 <!-- ─── Announcement bar ─────────────────────────────── -->
+<?php if (!empty($announcements)): ?>
 <div class="announce-bar" id="announceBar">
-  <div class="announce-msg active">🎉 <span>New arrivals just landed — explore our latest gifts &amp; fashion!</span></div>
-  <div class="announce-msg">🚚 <span>Visit us in-store for exclusive member deals and special offers.</span></div>
-  <div class="announce-msg">🎄 <span>Seasonal gifts now available — perfect for every occasion.</span></div>
-  <div class="announce-msg">💝 <span>Find the perfect gift for someone special — browse our full collection.</span></div>
-  <div class="announce-dots" id="announceDots">
-    <button class="announce-dot active"></button>
-    <button class="announce-dot"></button>
-    <button class="announce-dot"></button>
-    <button class="announce-dot"></button>
+  <?php foreach ($announcements as $i => $ann): ?>
+  <div class="announce-msg <?= $i === 0 ? 'active' : '' ?>">
+    <?= e($ann['emoji']) ?> <span><?= e($ann['message']) ?></span>
   </div>
+  <?php endforeach; ?>
+  <?php if (count($announcements) > 1): ?>
+  <div class="announce-dots" id="announceDots">
+    <?php foreach ($announcements as $i => $ann): ?>
+    <button class="announce-dot <?= $i === 0 ? 'active' : '' ?>"></button>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
   <button class="announce-dismiss" id="announceDismiss" title="Dismiss">×</button>
 </div>
+<?php endif; ?>
 
 <!-- ─── Navbar ────────────────────────────────────────── -->
 <header class="navbar">

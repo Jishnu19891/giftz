@@ -152,6 +152,10 @@ $bodyClass     = $bodyClass     ?? '';
       <span class="nav-icon">🛍</span>
       <span class="nav-label">Public Catalog</span>
     </a>
+    <a href="<?= BASE_URL ?>/announcements/index.php" class="nav-item <?= isActive('/announcements') ?>">
+      <span class="nav-icon">📢</span>
+      <span class="nav-label">Announcements</span>
+    </a>
 
   </nav>
 
