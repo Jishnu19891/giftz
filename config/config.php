@@ -15,8 +15,8 @@ define('UPLOAD_PATH', BASE_PATH . '/assets/uploads/products');
 define('UPLOAD_URL', BASE_URL . '/assets/uploads/products');
 
 // ─── Currency ─────────────────────────────────────────────
-define('CURRENCY_SYMBOL', '₱');
-define('CURRENCY_CODE', 'PHP');
+define('CURRENCY_SYMBOL', '₹');
+define('CURRENCY_CODE', 'INR');
 
 // ─── Pagination ───────────────────────────────────────────
 define('ROWS_PER_PAGE', 20);
@@ -25,7 +25,7 @@ define('ROWS_PER_PAGE', 20);
 define('LOW_STOCK_THRESHOLD', 5);
 
 // ─── Timezone ────────────────────────────────────────────
-date_default_timezone_set('Asia/Manila');
+date_default_timezone_set('Asia/Kolkata');
 
 // ─── Error Reporting (set to 0 in production) ────────────
 error_reporting(E_ALL);
