@@ -2,6 +2,8 @@
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/includes/db.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/visitor_tracker.php';
+trackVisit('catalog');
 
 $pdo     = db();
 $search  = trim($_GET['q']    ?? '');

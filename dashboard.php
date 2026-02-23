@@ -14,6 +14,12 @@ $totalProducts = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE status='a
 $lowStockItems = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE stock_qty <= min_stock_level AND status='active'")->fetchColumn();
 $totalCustomers= (int)$pdo->query("SELECT COUNT(*) FROM customers")->fetchColumn();
 $todaySales    = (int)$pdo->query("SELECT COUNT(*) FROM sales WHERE DATE(created_at)=CURDATE() AND status='completed'")->fetchColumn();
+// Visitors KPI (silently 0 if table doesn't exist yet)
+try {
+    $todayVisitors = (int)$pdo->query("SELECT COUNT(DISTINCT ip_hash) FROM visitor_logs WHERE DATE(created_at)=CURDATE()")->fetchColumn();
+} catch (Throwable $e) {
+    $todayVisitors = 0;
+}
 
 // Sales trend last 7 days
 $trendRows = $pdo->query("
@@ -123,6 +129,14 @@ require __DIR__ . '/includes/header.php';
             <div class="kpi-label">Customers</div>
             <div class="kpi-value"><?= number_format($totalCustomers) ?></div>
             <div class="kpi-sub">Registered</div>
+        </div>
+    </div>
+    <div class="kpi-card kpi-purple">
+        <div class="kpi-icon">👁</div>
+        <div class="kpi-info">
+            <div class="kpi-label">Today's Visitors</div>
+            <div class="kpi-value"><?= number_format($todayVisitors) ?></div>
+            <div class="kpi-sub"><a href="<?= BASE_URL ?>/visitors/index.php" style="color:inherit;text-decoration:underline;opacity:.75">View analytics</a></div>
         </div>
     </div>
 </div>

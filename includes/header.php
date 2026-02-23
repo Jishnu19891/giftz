@@ -139,6 +139,11 @@ $bodyClass     = $bodyClass     ?? '';
       <span class="nav-label">Stock Log</span>
     </a>
 
+    <a href="<?= BASE_URL ?>/visitors/index.php" class="nav-item <?= isActive('/visitors') ?>">
+      <span class="nav-icon">👁</span>
+      <span class="nav-label">Visitor Analytics</span>
+    </a>
+
     <?php if (isAdmin()): ?>
     <div class="nav-section-label">Admin</div>
     <a href="<?= BASE_URL ?>/users/index.php" class="nav-item <?= isActive('/users') ?>">
