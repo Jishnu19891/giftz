@@ -2,6 +2,7 @@
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/includes/db.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/visitor_tracker.php';
 
 $pdo = db();
 $id  = intval($_GET['id'] ?? 0);
@@ -10,6 +11,7 @@ if (!$id) {
     header('Location: ' . BASE_URL . '/public/catalog.php');
     exit;
 }
+trackVisit('product', $id);
 
 $stmt = $pdo->prepare("
     SELECT p.*, c.name AS category_name, c.id AS category_id
