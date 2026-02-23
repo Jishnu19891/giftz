@@ -13,7 +13,8 @@ $pageF  = $_GET['pf']   ?? '';            // catalog | product | ''
 $validR = ['7', '30', '90', 'all'];
 if (!in_array($range, $validR, true)) $range = '7';
 
-$dateWhere = $range === 'all' ? '1=1' : "created_at >= DATE_SUB(NOW(), INTERVAL {$range} DAY)";
+$dateWhere     = $range === 'all' ? '1=1' : "created_at >= DATE_SUB(NOW(), INTERVAL {$range} DAY)";
+$dateWhereJoin = $range === 'all' ? '1=1' : "v.created_at >= DATE_SUB(NOW(), INTERVAL {$range} DAY)";
 $pageWhere = $pageF ? "AND page = " . $pdo->quote($pageF) : '';
 
 // ── KPI counts ───────────────────────────────────────────────────────────────
@@ -60,7 +61,7 @@ $topProducts = $pdo->query("
     SELECT v.page_id, p.name, p.sku, COUNT(*) as views
     FROM visitor_logs v
     LEFT JOIN products p ON p.id = v.page_id
-    WHERE v.page = 'product' AND {$dateWhere} AND v.page_id IS NOT NULL
+    WHERE v.page = 'product' AND {$dateWhereJoin} AND v.page_id IS NOT NULL
     GROUP BY v.page_id, p.name, p.sku
     ORDER BY views DESC
     LIMIT 10
