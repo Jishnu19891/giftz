@@ -1,6 +1,9 @@
 # Claude Code session data
 .claude/
 
+# Composer dependencies
+/vendor/
+
 # XAMPP / PHP runtime
 *.log
 *.cache
