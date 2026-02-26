@@ -65,12 +65,30 @@
   - Wiki repo: https://github.com/Jishnu19891/giftz.wiki.git (clone to /tmp/giftz.wiki to edit)
   - Wiki initialized by user via browser; all subsequent updates pushed via git
   - **Sync rule:** docs/_Sidebar uses `[Label](file.md)` relative links; wiki/_Sidebar uses `[[Page-Name|Label]]` syntax — same structure, different link format; update both when pages are added
-- **Memory files** — `.claude/memory/MEMORY.md` + `architecture.md` (tracked in repo + mirrored to wiki)
+- **Memory files** — live in 3 places; keep all in sync when updating:
+  1. Local (source of truth): `C:\Users\welcome\.claude\projects\C--xampp-htdocs-giftz\memory\`
+  2. Repo: `.claude/memory/MEMORY.md` + `architecture.md`
+  3. Wiki: `Memory.md` + `Architecture.md` in `/tmp/giftz.wiki/`
+
+## Memory Sync Workflow
+When memory files are updated, run all three steps:
+```bash
+# 1. Copy to repo and push
+cp "C:/Users/welcome/.claude/projects/C--xampp-htdocs-giftz/memory/MEMORY.md" /c/xampp/htdocs/giftz/.claude/memory/MEMORY.md
+cp "C:/Users/welcome/.claude/projects/C--xampp-htdocs-giftz/memory/architecture.md" /c/xampp/htdocs/giftz/.claude/memory/architecture.md
+cd /c/xampp/htdocs/giftz && git add .claude/memory/ && git commit -m "Update memory files" && git push
+
+# 2. Copy to wiki and push
+cp /c/xampp/htdocs/giftz/.claude/memory/MEMORY.md /tmp/giftz.wiki/Memory.md
+cp /c/xampp/htdocs/giftz/.claude/memory/architecture.md /tmp/giftz.wiki/Architecture.md
+cd /tmp/giftz.wiki && git add Memory.md Architecture.md && git commit -m "Update Memory and Architecture wiki pages" && git push
+```
 
 ## Git / GitHub
 - Branch: main · Remote: https://github.com/Jishnu19891/giftz.git
 - gh CLI not authenticated — wiki managed by cloning wiki.git directly
-- Wiki initialized manually by user; then pushed via git clone of wiki repo
+- Wiki initialized manually by user; all subsequent updates pushed via git
+- If /tmp/giftz.wiki is missing: `git clone https://github.com/Jishnu19891/giftz.wiki.git /tmp/giftz.wiki`
 
 ## Patterns & Conventions
 - All admin pages call requireLogin() at top; admin-only pages also call requireRole('admin')
