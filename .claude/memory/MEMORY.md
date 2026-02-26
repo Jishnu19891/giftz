@@ -54,6 +54,7 @@
 - Run: `composer test`
 
 ## Documentation
+- **CHANGELOG.md** — reverse-chronological change log; latest entry: `[2026-02-26]` documenting all documentation work
 - **README.md** — full project documentation (976 lines)
 - **docs/** — 24 Markdown files: 22 module/topic pages + _Sidebar.md + _Footer.md
   - `_Sidebar.md` — relative Markdown links; has Internal section linking to `.claude/memory/`
