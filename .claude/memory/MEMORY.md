@@ -56,13 +56,16 @@
 ## Documentation
 - **README.md** — full project documentation (976 lines)
 - **docs/** — 24 Markdown files: 22 module/topic pages + _Sidebar.md + _Footer.md
-  - `_Sidebar.md` — navigation links using standard relative Markdown links
+  - `_Sidebar.md` — relative Markdown links; has Internal section linking to `.claude/memory/`
   - `_Footer.md` — version, source link, issue tracker, index link
 - **GitHub Wiki** — https://github.com/Jishnu19891/giftz/wiki
-  - 22 content pages + _Sidebar.md + _Footer.md (24 files total, mirrors docs/)
+  - 24 content pages + _Sidebar.md + _Footer.md (26 files total)
+  - Includes `Memory.md` and `Architecture.md` as Internal wiki pages
+  - Sidebar has Modules, Reference, and Internal sections
   - Wiki repo: https://github.com/Jishnu19891/giftz.wiki.git (clone to /tmp/giftz.wiki to edit)
   - Wiki initialized by user via browser; all subsequent updates pushed via git
   - **Sync rule:** docs/_Sidebar uses `[Label](file.md)` relative links; wiki/_Sidebar uses `[[Page-Name|Label]]` syntax — same structure, different link format; update both when pages are added
+- **Memory files** — `.claude/memory/MEMORY.md` + `architecture.md` (tracked in repo + mirrored to wiki)
 
 ## Git / GitHub
 - Branch: main · Remote: https://github.com/Jishnu19891/giftz.git
