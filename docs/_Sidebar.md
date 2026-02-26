@@ -32,3 +32,10 @@
 - [Frontend Assets](frontend.md)
 - [Testing](testing.md)
 - [Security](security.md)
+
+---
+
+### Internal
+
+- [Project Memory](../.claude/memory/MEMORY.md)
+- [Architecture](../.claude/memory/architecture.md)
