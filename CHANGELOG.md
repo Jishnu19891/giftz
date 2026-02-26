@@ -5,6 +5,65 @@ Format: `## [YYYY-MM-DD HH:MM] — <summary>`
 
 ---
 
+## [2026-02-26] — Add comprehensive project documentation
+
+**Files changed:**
+- `README.md` *(rewritten)*
+- `docs/index.md` *(new)*
+- `docs/dashboard.md` *(new)*
+- `docs/pos.md` *(new)*
+- `docs/sales.md` *(new)*
+- `docs/purchases.md` *(new)*
+- `docs/products.md` *(new)*
+- `docs/categories.md` *(new)*
+- `docs/suppliers.md` *(new)*
+- `docs/customers.md` *(new)*
+- `docs/expenses.md` *(new)*
+- `docs/reports.md` *(new)*
+- `docs/visitors.md` *(new)*
+- `docs/announcements.md` *(new)*
+- `docs/users.md` *(new)*
+- `docs/storefront.md` *(new)*
+- `docs/installation.md` *(new)*
+- `docs/configuration.md` *(new)*
+- `docs/database.md` *(new)*
+- `docs/utilities.md` *(new)*
+- `docs/frontend.md` *(new)*
+- `docs/testing.md` *(new)*
+- `docs/security.md` *(new)*
+- `docs/_Sidebar.md` *(new)*
+- `docs/_Footer.md` *(new)*
+- `.claude/memory/MEMORY.md` *(new)*
+- `.claude/memory/architecture.md` *(new)*
+- `.gitignore` *(modified — exclude only `settings.local.json` instead of entire `.claude/`)*
+
+**What:**
+- Rewrote `README.md` from a 2-line placeholder into 976 lines of full project
+  documentation covering overview, features, tech stack, annotated file tree,
+  installation steps, configuration reference, all 14 database tables, per-module
+  workflows, core utility API, frontend asset reference, auth/role matrix, PHPUnit
+  testing guide, security measures, and known limitations.
+- Created `docs/` folder with 22 dedicated Markdown pages — one per module and
+  reference topic — plus `_Sidebar.md` (relative Markdown nav links) and
+  `_Footer.md` (version, source, issue tracker, index link).
+- Published a **GitHub Wiki** at https://github.com/Jishnu19891/giftz/wiki with
+  all 22 pages mirrored from `docs/`, plus `_Sidebar.md` (GitHub `[[Page]]`
+  syntax), `_Footer.md`, and Internal pages (`Memory.md`, `Architecture.md`).
+  Wiki sidebar has three sections: Modules, Reference, and Internal.
+- Added `.claude/memory/MEMORY.md` and `.claude/memory/architecture.md` to the
+  repo — Claude Code project memory files tracking project structure, key file
+  paths, conventions, sync workflows, and architectural patterns. Mirrored to the
+  wiki as Internal pages.
+
+**Why:** The project had no documentation beyond a two-line README. With multiple
+modules, 14 database tables, a PHPUnit test suite, and a public storefront
+alongside the admin back-office, new developers (or a returning AI session) had
+no entry point for understanding the system. The docs, wiki, and memory files
+together provide full coverage at every level — from quick-start installation to
+per-function API reference.
+
+---
+
 ## [2026-02-21] — Add expense tracking feature
 
 **Files changed:**
