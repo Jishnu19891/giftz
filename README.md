@@ -46,6 +46,7 @@ A full-featured web-based **Inventory Management & Point of Sale (POS)** system 
 - **Currency:** Indian Rupee (₹ / INR)
 - **Timezone:** Asia/Kolkata (IST)
 - **Deployment target:** XAMPP on Windows (localhost)
+- Practicing Git workflow — branch created on 25 June 2026.
 
 ---
 
