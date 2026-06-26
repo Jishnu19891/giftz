@@ -7,7 +7,7 @@
 
 <!-- ─── App Scripts ─────────────────────────────────────── -->
 <script>
-  window.CURRENCY_SYMBOL = '<?= CURRENCY_SYMBOL ?>';
+  window.CURRENCY_SYMBOL = '<?= GIFTZ_CURRENCY_SYMBOL ?>';
   window.BASE_URL = '<?= BASE_URL ?>';
 </script>
 <script src="<?= BASE_URL ?>/assets/js/main.js"></script>
