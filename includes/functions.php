@@ -3,7 +3,7 @@ require_once __DIR__ . '/db.php';
 
 // ─── Currency ─────────────────────────────────────────────────────────────────
 function formatCurrency(float $amount): string {
-    return CURRENCY_SYMBOL . number_format($amount, 2);
+    return GIFTZ_CURRENCY_SYMBOL . number_format($amount, 2);
 }
 
 // ─── SKU Generation ───────────────────────────────────────────────────────────

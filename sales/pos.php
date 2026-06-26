@@ -178,22 +178,22 @@ require dirname(__DIR__) . '/includes/header.php';
         <div class="cart-totals">
             <div class="totals-row">
                 <span class="label">Subtotal</span>
-                <span class="value" id="subtotalVal"><?= CURRENCY_SYMBOL ?>0.00</span>
+                <span class="value" id="subtotalVal"><?= GIFTZ_CURRENCY_SYMBOL ?>0.00</span>
             </div>
             <div class="totals-row" style="flex-direction:column;align-items:flex-start;gap:.3rem">
                 <span class="label">Discount</span>
                 <div class="discount-row" style="width:100%">
                     <div class="discount-type-toggle">
-                        <button class="discount-type-btn active" type="button" data-type="flat"><?= CURRENCY_SYMBOL ?></button>
+                        <button class="discount-type-btn active" type="button" data-type="flat"><?= GIFTZ_CURRENCY_SYMBOL ?></button>
                         <button class="discount-type-btn" type="button" data-type="percent">%</button>
                     </div>
                     <input type="number" id="discountInput" class="form-control" min="0" step="0.01" placeholder="0" style="flex:1;min-width:0">
-                    <span id="discountVal" style="color:var(--danger);font-weight:600;white-space:nowrap"><?= CURRENCY_SYMBOL ?>0.00</span>
+                    <span id="discountVal" style="color:var(--danger);font-weight:600;white-space:nowrap"><?= GIFTZ_CURRENCY_SYMBOL ?>0.00</span>
                 </div>
             </div>
             <div class="totals-row total">
                 <span class="label">TOTAL</span>
-                <span class="value" id="totalVal"><?= CURRENCY_SYMBOL ?>0.00</span>
+                <span class="value" id="totalVal"><?= GIFTZ_CURRENCY_SYMBOL ?>0.00</span>
             </div>
         </div>
 

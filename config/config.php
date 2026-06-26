@@ -15,7 +15,7 @@ define('UPLOAD_PATH', BASE_PATH . '/assets/uploads/products');
 define('UPLOAD_URL', BASE_URL . '/assets/uploads/products');
 
 // ─── Currency ─────────────────────────────────────────────
-define('CURRENCY_SYMBOL', '₹');
+define('GIFTZ_CURRENCY_SYMBOL', '₹');
 define('CURRENCY_CODE', 'INR');
 
 // ─── Pagination ───────────────────────────────────────────

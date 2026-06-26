@@ -92,7 +92,7 @@ require dirname(__DIR__) . '/includes/header.php';
                            value="<?= e($form['expense_date']) ?>" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Amount (<?= CURRENCY_SYMBOL ?>) <span style="color:var(--danger)">*</span></label>
+                    <label class="form-label">Amount (<?= GIFTZ_CURRENCY_SYMBOL ?>) <span style="color:var(--danger)">*</span></label>
                     <input type="number" name="amount" class="form-control" min="0.01" step="0.01"
                            value="<?= e($form['amount']) ?>" placeholder="0.00" required>
                 </div>

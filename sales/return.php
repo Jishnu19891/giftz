@@ -211,7 +211,7 @@ require dirname(__DIR__) . '/includes/header.php';
                                style="width:80px;text-align:center;margin:0 auto">
                     </td>
                     <td class="text-right fw-bold refund-cell" style="color:var(--danger)">
-                        <?= CURRENCY_SYMBOL ?>0.00
+                        <?= GIFTZ_CURRENCY_SYMBOL ?>0.00
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -223,7 +223,7 @@ require dirname(__DIR__) . '/includes/header.php';
                         </td>
                         <td class="text-right fw-bold" id="totalRefundCell"
                             style="color:var(--danger);font-size:1.1rem;padding:.85rem 1rem">
-                            <?= CURRENCY_SYMBOL ?>0.00
+                            <?= GIFTZ_CURRENCY_SYMBOL ?>0.00
                         </td>
                     </tr>
                 </tfoot>
@@ -277,7 +277,7 @@ require dirname(__DIR__) . '/includes/header.php';
                             border:1px solid rgba(239,68,68,.2);border-radius:var(--radius)">
                     <div class="fs-sm text-muted" style="margin-bottom:.25rem">Total to Refund</div>
                     <div id="refundSummary" style="font-size:1.5rem;font-weight:700;color:var(--danger)">
-                        <?= CURRENCY_SYMBOL ?>0.00
+                        <?= GIFTZ_CURRENCY_SYMBOL ?>0.00
                     </div>
                     <div class="fs-sm text-muted" style="margin-top:.3rem">
                         Returned items will be added back to stock.
